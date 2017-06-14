@@ -1,0 +1,443 @@
+---
+title: "Tutorial 2 - Answers"
+author: "GSTAT"
+date: "December 5, 2016"
+output:
+  html_document:
+    toc: yes
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+load("D:/G-stat/Cal_RCourse/Data/.RData")
+```
+
+## Targil 1 
+
+______
+
+### 1.1.
+
+```{r dplyr_answer1}
+
+sum_tbl <- Santander_sample %>% 
+           summarise("Freq"=n()
+                     ,"Total"=sum(renta)
+                     ,"Mean"=mean(renta)
+                     ,"Sd"=sd(renta)
+                     ,"Median"=median(renta)
+                     ,"Min"=min(renta)
+                     ,"Max"=max(renta)
+                     )
+
+sum_tbl
+```
+
+_______
+
+
+### 1.2. 
+
+
+```{r dplyr_answer2}
+
+sum_tbl <- Santander_sample %>% 
+           group_by(sexo) %>% 
+           summarise("Freq"=n()
+                     ,"Total"=sum(renta)
+                     ,"Mean"=mean(renta)
+                     ,"Sd"=sd(renta)
+                     ,"Median"=median(renta)
+                     ,"Min"=min(renta)
+                     ,"Max"=max(renta)
+                     )
+
+
+sum_tbl
+```
+
+_________
+
+
+### 1.3.  
+
+
+```{r dplyr_answer3}
+# Example2:
+sum_tbl <- Santander_sample %>% 
+            filter(renta>=100) %>% 
+           group_by(sexo) %>% 
+           summarise("Freq"=n()
+                     ,"Total"=sum(renta)
+                     ,"Mean"=mean(renta)
+                     ,"Sd"=sd(renta)
+                     ,"Median"=median(renta)
+                     ,"Min"=min(renta)
+                     ,"Max"=max(renta)
+                     )
+
+sum_tbl  
+```
+
+________
+
+
+### 1.4.  
+
+
+```{r dplyr_answer4}
+
+sum_tbl <- Santander_sample %>% 
+           group_by(sexo) %>% 
+           summarise("Freq"=n()
+                     ,"Total"=sum(renta)
+                     ,"Mean"=mean(renta)
+                     ,"Sd"=sd(renta)
+                     ,"Median"=median(renta)
+                     ,"Min"=min(renta)
+                     ,"Max"=max(renta)
+                    ) %>% 
+              filter(Freq>=100)
+
+sum_tbl 
+```
+
+
+*שימו לב להבדל במיקום של filter בשני התרגילים!*  
+
+________
+
+### 1.5.
+
+```{r}
+santander_short <- Santander_sample %>%
+                    select( ind_cc
+                           , ncodpers
+                           , fecha_dato
+                           , age
+                           , sexo
+                           , renta
+                           , vetek = antiguedad
+                           , nomprov)
+
+```
+
+_______
+
+### 1.6. 
+
+```{r dplyr_answer6}
+
+santander_short <- santander_short %>% 
+                    mutate(vetek = vetek/12)
+
+```
+
+________
+
+### 1.7.
+
+```{r dplyr_answer7}
+
+santander_short <- santander_short %>% 
+                    mutate(gil_vetek = ifelse(age<30 & vetek<3, 1
+                                      ,ifelse(age<30 & vetek>3, 2
+                                      ,ifelse(age>30 & vetek<5, 3
+                                                              , 4)))
+                           )
+
+count(santander_short, gil_vetek)
+
+```
+_________
+
+
+### 1.8.
+
+```{r dplyr_answer8}
+
+santander_short %>% 
+  filter(nomprov == 'BARCELONA') %>% 
+  group_by(gil_vetek) %>% 
+  summarise( mean_cc = mean(ind_cc, na.rm = TRUE))
+
+
+```
+
+_________
+
+### 1.9.
+
+```{r dplyr_answer9}
+
+prov_stats <- santander_short %>% 
+              group_by(nomprov) %>% 
+              summarise( Freq = n(), mean_cc = mean(ind_cc, na.rm = TRUE)) %>% 
+              arrange( desc(Freq))
+  
+
+```
+
+_______
+
+
+### 1.10.
+
+```{r dplyr_answer10}
+
+prov_stats %>% slice(18)
+
+```
+
+
+__________
+________
+
+## Targil 2 - 
+
+_______
+
+### 2.1. 
+
+```{r tagil2_1}
+
+summarise(Santander_sample
+          , "N Distinct" = n_distinct(fecha_dato, ncodpers)
+          , "N" = n())
+
+```
+
+____
+
+### 2.2. 
+
+```{r targil2_2}
+
+# option 1
+
+santander_short %>% 
+  select(-sexo, -nomprov) %>% 
+  summarise_all(mean, na.rm = TRUE)
+
+# option 2
+
+santander_short %>% 
+  summarise_if(is.numeric, mean, na.rm = TRUE)
+
+# option 3
+
+santander_short %>% 
+  summarise_at( vars(-sexo, -nomprov, -fecha_dato)
+                , mean
+                , na.rm = TRUE)
+
+```
+
+___
+
+
+### 2.3. 
+
+```{r targil2_3}
+
+prov_stats <- prov_stats %>% ungroup() %>% 
+              mutate( prov_percent = Freq / sum(Freq)
+                      ,prov_cumpercent = cumsum(prov_percent)
+                      , prov_rank_cc = dense_rank( - mean_cc)
+                    )
+
+```
+
+
+### 2.4.
+
+```{r targil2_4}
+
+# option 1 
+
+# prov_stats <- prov_stats %>% 
+#               mutate_at(vars(prov_percent, prov_cumpercent) , funs(.*100))
+
+
+# option 2
+prov_stats <- prov_stats %>% 
+              mutate_at(vars(contains('percent')), funs(.*100))
+
+```
+
+____
+
+### 2.5.
+
+```{r targil2_5}
+
+prov_stats %>% filter(prov_rank_cc == max(prov_rank_cc) | prov_rank_cc == min(prov_rank_cc))
+
+```
+
+_____
+
+### 2.6.
+
+```{r targil2_6}
+
+santander_short <- santander_short %>% 
+                    group_by(nomprov) %>% 
+                    mutate( mean_renta = mean(renta, na.rm = TRUE))
+
+```
+
+___
+
+
+### 2.7.
+
+```{r targil2_7}
+santander_short <- santander_short %>% 
+                    group_by(nomprov) %>% 
+                    filter( renta> median(renta))
+                      
+                    
+```
+
+____
+
+### 2.8.
+
+```{r targil2_8}
+
+santander_short %>% 
+  ungroup() %>% 
+  arrange(desc(renta)) %>% 
+  slice(1:7)
+
+```
+
+____
+
+### 2.9.
+
+```{r targil2_9}
+
+santander_short2 <-  left_join(santander_short, prov_stats
+                              ,by = c("nomprov" = "nomprov"))
+
+```
+
+___
+
+### 2.10.
+
+```{r}
+prov_stats2 <- filter(prov_stats, prov_percent > 1 )
+santander_short2 <-  semi_join(santander_short, prov_stats2
+                              ,by = c("nomprov" = "nomprov"))
+
+
+```
+
+____
+
+## Targil 3
+
+____
+
+### 3.1.
+
+```{r targil3_1}
+library(tidyr)
+
+prov_stats <- gather(prov_stats
+                     , key = variable
+                     , value = variable_value
+                     , -nomprov)
+
+```
+
+____
+
+
+### 3.2.
+
+```{r targil3_2}
+
+prov_stats <- spread(prov_stats
+                     , key = variable
+                     , value = variable_value)
+
+```
+
+___
+
+### 3.3.
+
+```{r targil3_3}
+
+santander_short <- unite(santander_short
+                         , age_sex
+                         , age, sexo
+                         , sep = "_"
+                         , remove = TRUE)
+
+```
+
+
+____
+
+### 3.4.
+
+```{r targil3_4}
+
+santander_short <- separate(santander_short
+                            , age_sex
+                            , c("age", "sexo")
+                            , sep = "_"
+                            , convert = TRUE)
+
+```
+
+____
+
+### 3.5.
+
+```{r targil3_5}
+library(reshape2)
+santander_melt <- melt(santander_short
+                         , measure.vars = c("mean_renta", "renta")
+                         , variable.name = "var_names"
+                         , value.name = "var_values")
+
+```
+
+___
+
+### 3.6.
+
+```{r targil3_6}
+
+santander_cast <- dcast(santander_melt, 
+                          ... ~ var_names 
+                          ,value.var = "var_values"
+                          )
+
+```
+
+____
+
+
+### 3.7.
+
+```{r targil3_7}
+
+santander_cast <- dcast(santander_melt
+                        ,nomprov + sexo ~ var_names
+                        , fun.aggregate = mean)
+
+```
+
+
+### 3.8.
+
+We couldnt do the last 2 targilim with tidyr.

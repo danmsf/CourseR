@@ -1,0 +1,1568 @@
+---
+title: "Tutorial 2"
+author: "GSTAT"
+output:
+  html_document:
+    toc: yes
+    toc_float: true
+    toc_depth: 4
+
+---
+
+![](figures\gstat_logo.jpg)
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(dplyr)
+library(stargazer)
+library(formattable)
+library(printr)
+
+load("D:/G-stat/Cal_RCourse/Data/.RData")
+
+```
+
+<div dir=rtl>
+
+*************  
+
+# הקדמה
+
+בשיעורים הקודמים למדנו את הבסיס של R. מה שנקרא R BASE
+
+מעכשיו עד סוף הקורס אנו נשתמש בספריות חיצוניות שעושות את העבודה ב R יותר הרבה קל ומעניין.  
+
+בשיעור הזה נתרכז במספר ספריות המהוות חלק מאוסף של ספריות המאוגדות תחת הכותרת ה tidyverse 
+
+הספריות שנתמקד בהן בשיעור הזה הן:  
+
+* `dplyr` - שפה נוחה לשאילתות  
+
+* `tidyr` - פקודות לביצוע מנפולציות על טבלאות
+
+* `reshape2` - פקודות לשחלוף מבנה אובייקטים
+
+
+
+________________________________________    
+
+
+## מטרות השיעור  
+
+* להשתמש בספריות חיצוניות
+* תדעו לייבא נתונים ל R
+* לשנות פורמטים של משתנים  
+* לבצע שאילתות בסיסיות  
+* ומורכבות יותר...  
+* לחבר טבלאות ביחד  
+* לשנות את הצורה של טבלה  
+* ועוד
+
+____________________________    
+
+
+# שימוש בספריות חיצוניות  
+
+ספריה חיצונית היא סוג של תוספת פקודות שמישהו כתב והנגיש לציבור הרחב.  
+
+
+______________________   
+
+## הורדת הספריה  
+
+כדי להשתמש בספריה אנחנו צריכים להוריד אותה מהאינטרנט  
+
+רוב הספריות נשמרות במאגר באתר CRAN 
+
+מ RSTUDIO אפשר לחפש ולהוריד ספריות לפי שם מטאב Packages  וללחוץ על הכפתור Install
+
+הספריות נשמרות בתיקיה במחשב שהוגדר מראש ושם R יודע לחפש אותם  
+
+כל הספריות לקורס כבר הותקנו במחשב  
+
+______________________    
+
+## שימוש בספריה  
+
+כדי להשתמש בספריה, צריך להטעין אותה לתוך הזכרון בעזרת הפקודה `library()`   כך:  
+
+
+<div dir=ltr>
+
+```{r library_demo}
+# Install readr package:
+library(readr)
+```
+
+</div>
+
+לחלופין ניתן לסמן אותה ב V ב טאב של ה Packages  
+
+עכשיו כל הפקודות של הספריה זמינות לשימוש   
+
+_____________________    
+
+##  עזרה על הספריה
+
+כל הפקודות של הספריה מתועדות עם עזרה שניתן לראות בדרך הרגילה (שימוש בחלונית או ב  ?)
+
+בנוסף, בחיללות מסויימות יש תעוד כללי עם דוגמאות והסבר ידידותי למשתמש שנקרא Vigenette  
+
+כדי לראות אותה:  
+
+* פתחו את הטאב Packages  
+	+ מצאו את הספריה שלכם ולחצו על השם שלה
+		+ לחצו על הקישור של ה vignettes and other documentation
+			+ בחרו את הנושא שמעניין אותכם  
+
+______________________________________
+
+#### תרגיל 1: {.tabset .tabset-fade}
+
+##### שאלות 
+
+1. הטעינו את הספריה `dplyr`
+2. נווטו על ה vignette של החבילה ותפתחו בנושא: introduction
+
+______________________    
+______________________    
+
+# קריאת נתונים ל RSTUDIO
+
+___________
+
+
+## ייבוא נתונים מקבצים בודדים
+
+בעבר הלא רחוק, הייתם צריכים לכתוב קוד בשביל לייבא נתונים ממקורות חיצוניים.
+
+כיום, יש אפשרות נוחה לייבא נתונים בעזרת לחיצה על הכפתור `Import Dataset` ובחירת סוג הנתונים הרצוי.
+
+___________
+
+## ייבוא נתונים ממקורות אחרים
+
+בעזרת ספריות חיצוניות ניתן לחבר את R  למאגרי נתונים כגון SQL, ORACLE , וכדומה.  
+בתיקיות מצורף קוד לחיבור ל  ORACLE. 
+כמו כן יש ספריה חדשה המאפשרת ממשק נוח בין R ל SPARK.
+
+_______________
+
+## הטענת נתונים של  R
+
+ב R הנתונים נשמרים בתור סביבת עבדוה בסיומת *.RData אותו ניתן להטעין ולשמור בעזרת האיקונים ב RSTUDIO.
+או בעזרת הפקודות `load()` ו `save()`.
+
+
+_____________________  
+______________________   
+
+
+#### תרגיל 2: {.tabset .tabset-fade}
+##### שאלות 
+
+1. קראו את הקובץ test.csv לתוך R
+2. איך R שמר את הטבלה ? 
+3. מחקו את סביבת העבודה והטעינו את סביבית העבודה שנמצאת בתיקייה R
+
+___________   
+
+
+בפתיחת קובץ ה CSV, שימו לב לכמה דברים:  
+
+* ה GUI מראה לכם את הקוד שאתם הייתם צריכים לבצע באופן ידני
+* הפקודה ייבא את הטבלה בתור "tbl_df"  סוג של "data.frame"  
+* הקודים השונים יובאו בתור "Integer"  
+
+
+_________________
+
+
+# ברוכים הבאים ל  tidyverse
+
+חבילת ה tidyverse מאגדת בתוכה מספר חבילות שמייצרות שפה חדשה לטיפול בנתונים ב R.   
+
+המשתוף לכל הספריות הכללות ב tidyverse הוא התמקדות בניקוי , סידור וביצוע פעולות על טבלאות.
+כאשר הפילוסופיה של טבלה "מסודרת" היא ש:
+
+1. כל משתנה יוצר עמודה
+2. כל שורה היא תצפית 
+3. כל סוג של יחידת תצפית יוצרת טבלה  
+ 
+__________  
+
+
+## ספריות ה tidyverse
+
+  בין החבילות הבולטות שנעשה בהן שימוש:
+  
+* dplyr - שאילתות מורכבות על טבלאות נתונים
+* tidyr - מנפולציות על טבלאות נתונים 
+* ggplot2 - שפה של יצירת גרפים
+* purrr - כתיבת פונקציות 
+
+
+למעשה, אלה החבילות הנפוצות ביותר וניתן להטעין אותם בפקודה אחת library(tidyverse)  
+  
+  
+נגע בקצרה או נשתמש בעקיפין במספר ספריות נוספות:
+
+* lubridate - פעולות על תאריכים
+* tibble - יצירת טבלאות מסוג tbl_df
+* broom - הפיכת תוצאות רגרסיה לטבלאות 
+
+
+לרשימה המלאה של הספריות הכללולות ראו בלינק:
+
+https://github.com/tidyverse/tidyverse
+
+________________________   
+
+## Syntax  
+
+
+ברוב הפקודות של ה `tidyverse` ה syntax הוא בצורת:
+ 
+<div dir=ltr>
+
+> functionName(tableName, paramters)
+
+</div>
+
+למשל: 
+
+
+<div dir=ltr>
+
+
+>  summarise(Table, mean(Variable1))
+
+>  select(Table, col1, col2, col3)
+
+>  group_by(Table, group1)  
+
+
+</div>
+
+______________________________   
+
+
+אבל כשמתשמשים בכמה פקודות יחד זה נהיה מסורבל  
+  
+אם נרצה ממוצע של המשתנה אושר לפי ענף, נכתוב: 
+
+<div dir=ltr>
+
+```{r group_sum1, asis = TRUE}
+library(dplyr)
+
+grp_seg <- group_by(Santander_sample, segmento)
+
+sum_table <- summarise(grp_seg, mean(renta))
+
+#print results
+sum_table %>% slice(1:10) %>% formattable()
+
+```
+
+
+
+</div>
+
+* כפי שראיתם קודם היינו צריכים ליצר טבלה חדשה זהה למקור מחולקת לפי ענף  
+* ואז לבצע עליה את הסכימה
+  
+    
+אופציה נוספת הייתה לשים את זה ישר בפנים ככה:  
+
+<div dir=ltr>
+
+```{r group_sum2}
+
+sum_table <- summarise(group_by(Santander_sample,segmento), mean(renta))
+
+#print results
+sum_table %>% slice(1:10) %>% formattable()
+
+```
+
+
+
+</div>
+  
+    
+אבל שני האופציות יוצרות סיבוכיות:
+   
+   
+* אופציה 1 משכפלת נתונים   
+* אופציה 2 קשה יותר להבנה  
+  
+
+*לכן המציאו פתרון האופרטור ` %>% `*
+
+
+____________________________   
+
+
+### האופרטור  ` %>% `
+
+
+
+האופרטור `%>%`  אומר: " שים את מה שמשמאל בתור המשתנה הראשון בפונקציה שמימין"
+
+
+**הפקודות נכתבות בסדר שנרצה לבצע אותם!!**
+
+כפי שתראו זה יוצר קוד נקי מובן ומונע את הבעיות דלעיל.  
+
+עכשיו נכתוב:  
+
+<div dir=ltr>
+
+```{r good_plyr}
+sum_table <- Santander_sample %>% 
+          group_by(segmento) %>% 
+          summarize(mean(renta))
+
+#print results
+sum_table %>% slice(1:10) %>% formattable()
+```
+
+
+
+</div>
+
+*ניתן להשתמש באופרטור בכל הפקודות לא רק של dplyr*
+
+מעכשיו נשתדל להשתמש באופרטור הזה בכל שאילתה מורכבת.  
+
+**הקיצור לאופרטור הוא  Ctrl Shift M**
+
+_________________ 
+
+### שומר המקום  `.`
+
+לפעמים נרצה להשתמש באופרטור `%>%` שלא בתור הערך של הפרמטר הראשון בפקודה
+
+במקרים כאלה , ובאופן כללי כשאנחנו רוצים לסמן השמה במקום מסוים, נשתמש בסימון `.` כדי ל*שמור* את המקום עבור הפרמטר/ משתנה
+
+______________
+
+
+## שימוש ב tibble
+
+
+ לפני שנתחיל:  
+
+* נטעין את ספריית `dplyr`
+* ונמיר את הטבלה המרכזית ל `tibble`
+
+tibble היא סוג של data frame משודרג השייכת ל `tidyverse` שההבדלים ביניהם הן:
+ 
+1. מראה רק 10 תצפיות ראשונות
+2. תמיד מחזיר טבלה...   
+
+**שימו לב שהטבלה עדיין תהיה data frame ונוכל לבצע את כל מה שלמדנו בשיעור הקודם גם בטבלאות מסוג tibble**
+ 
+<div dir=ltr>
+
+
+```{r load_dplyr}
+
+library(dplyr)
+
+Santander_sample <- tbl_df(Santander_sample)
+
+class(Santander_sample)
+
+```
+
+</div>
+
+
+
+
+______________________________________    
+
+
+# ספרית  `dplyr`   
+
+ספרית `dplyr` תהיה סוס העבודה שלנו להמשך הקורס
+
+הפקודות בה מאשפרות:    
+
+
+* לבצע שאילתות בסיסיות ומורכבות  
+* לבצע חישובים ומניפולציות על המשתנים   
+* לכתוב ב syntax קבוע וקל לקריאה והבנה    
+
+_______________________    
+
+## פקודות עיקריות לשאילתות
+
+הפילוסופיה של הספריה היא שכל פקודה תעשה משהו אחד בלבד - בצורה הטובה ביותר  
+
+בהתאם לכך, רוב הזמן נשתמש במספר פקודות ביחד כדי לבצע משימה
+
+
+הפקודות הבסיסיות הן:
+
+> * `filter` - סינון נתונים לפי תנאים
+> * `arrange` - מיון נתונים לפי שדות
+> * `select` - בחירת שדות מסוימות
+> * `group_by` - קיבוץ לפי קבוצות
+> * `summarise` - סיכום עמודה לערך אחד
+> * `mutate` - שינוי שדה ויצירת שדה חדש
+> * `rename` - שינוי שם שדה
+> * `distinct` - בחירת שורות ייחודיות
+> * `transmutate` - החזרת רק שדה מחושב
+> * `slice` - בחירת שורות לפי מיקום , למשל 10 הראשונים
+
+
+* בנוסף הפקודות הבאות מקלות מאוד על החיים:  
+  
+  
+> * `mutate_at` - בצע שינוי או חישוב על כל עמודה מסומנת
+> * `summarise_at` - בצע סיכום לכל עמודה מסומנת
+> * `mutate_all` - בצע שינוי או חישוב על כל העמודות
+> * `summarise_all` - בצע סיכום לכל העמודות
+> * `mutate_if` - בצע שינוי או חישוב על כל עמודה העומדת בתנאי
+> * `summarise_if` - בצע סיכום לכל עמודה העומדת בתנאי
+
+> * `n_distinct` - מחזיר מספר שורות ייחודיות
+> * `count` - טבלת שכיחות
+> * `tally` - ספירה או סכימת עמודה
+  
+  
+כפי שאתם רואים יש הרבה פקודות (ואלה רק השימושיות ביותר)  
+
+בהמשך נעבור על עוד משפחה של פקודות שיעזרו לחבר נתונים    
+
+בנוסף אתם מוזמנים להשתמש ב cheat-sheet המצורף בכל עת.  
+
+____________________
+___________________
+
+  
+### count - טבלת שכיחויות
+  
+ לפני שנלך ונסתבך, בואו נראה טבלת שכיחויות בסיסית:  לפי סגמנט
+
+<div dir=ltr>
+
+```{r  basic_count1}
+sum_tbl <- Santander_sample %>% 
+           count(segmento)
+
+# print results
+sum_tbl %>% slice(1:10) %>% formattable()
+```
+
+</div>  
+
+* וטיפה מורכב יותר: סגמנט לפי חודש
+
+<div dir=ltr>
+```{r  basic_count2}
+sum_tbl <- Santander_sample %>% 
+           count(fecha_dato, segmento)
+
+# print results
+sum_tbl %>% slice(1:10) %>% formattable()
+
+```
+
+</div>
+
+_______________
+________________  
+
+
+### select  - בחירת עמודות
+
+
+זה די אינטואטיבי - נבחר רק את השדות: סגמנט ואינדיקטור לכרטיס אשראי (ind_cc) ותאריך
+
+<div dir=ltr>
+```{r select_basic}
+
+segment_cc <- Santander_sample %>% 
+               select(segmento
+                      , ind_cc
+                      , fecha_dato
+                      , age
+                      , sexo)
+
+segment_cc %>% slice(1:10) %>% formattable()
+
+```
+
+</div> 
+
+#### שינוי שם משתנה
+
+* אם נרצה לשנות שם של משתנה אפשר לעשות את זה בעזרת `select` , למשל:
+
+<div dir=ltr>
+
+
+```{r select_basic2}
+
+segment_cc <- Santander_sample %>% 
+               select(segmento
+                      , ind_cc
+                      , fecha_dato
+                      , age
+                      , sex = sexo)
+
+segment_cc %>% slice(1:10) %>% formattable()
+
+```
+
+</div> 
+
+* אפשר גם להשתמש בפקודה `rename` באותה צורה, כאשר בניגוד  ל `rename`,`select` מחזיר את כל שאר העמודות
+
+
+________
+
+#### שינוי סדר העמודות
+
+* ואם נרצה לשנות את הסדר של העמודות נעשה את זה פה בעזרת פונקציית העזר `()everything`  המסמן את כל שאר העמודות :   
+
+
+<div dir=ltr>
+
+```{r select_basic3}
+
+segment_cc <- segment_cc %>%
+              select(sex, age, everything())
+
+segment_cc %>% slice(1:10) %>% formattable()
+
+```
+
+</div> 
+
+
+
+
+___________________   
+____________________
+
+
+### arrange - מיון 
+
+ועכשיו נמיין את הקובץ החדש לפי שתי השדות: 
+  
+<div dir=ltr>
+  
+```{r arrange_basic, results='asis'}
+  
+segment_cc <- segment_cc %>% 
+              arrange(segmento, ind_cc)
+
+#print results
+
+segment_cc %>% slice(1:10) %>% formattable()
+
+
+```
+
+
+</div>
+
+ואם נרצה לסדר חלק מהמשתנים בסדר יורד נשים אותם ב `desc()`
+
+<div dir=ltr>
+
+```{r arrange_basic2, results='asis'}
+
+segment_cc <- segment_cc %>% 
+              arrange(segmento, fecha_dato, desc(ind_cc))
+
+# print results
+segment_cc %>% slice(1:10) %>% formattable()
+
+```
+
+</div>
+
+__________________   
+____________________
+
+
+### slice  - חיתוך לפי מקום
+
+עכשיו נראה את 5 השורות עם האושר הכי נמוך
+
+<div dir=ltr>
+
+```{r slice_basic}
+
+segment_bottom_5 <- Santander_sample %>% 
+                    select(renta, fecha_dato, segmento, ind_cc) %>% 
+                    arrange(renta) %>% 
+                    slice(1:5)
+
+#print results
+segment_bottom_5 %>% slice(1:5) %>% formattable()
+
+```
+
+</div>
+
+* שימו לב שהשתמשתי באופרטור `:` כדי לציין את המספרים 1 עד 5  
+
+_____________________    
+
+### filter - סינון
+
+
+עכשיו נסנן ונראה את האושר הכי נמוך מעל 100: 
+
+
+<div dir=ltr>
+```{r filter_basic}
+
+
+# After Filter
+segment_bottom_5 <- Santander_sample %>% 
+                    select(renta, fecha_dato, segmento, ind_cc) %>% 
+                    filter(renta>100) %>% 
+                    arrange(renta) %>% 
+                    slice(1:5)
+
+#print results
+segment_bottom_5 %>% formattable()
+
+```
+
+
+</div>
+
+*שימו לב: את הסינון תשימו לפי סדר הפעולות שאתם רוצים לבצע*    
+
+
+_______________________   
+
+
+
+### summarise -  סיכום
+
+
+נפתח עם משימה פשוטה: סכימת סך האושר בקובץ: 
+
+<div dir=ltr>
+
+```{r basic_sum}
+
+# sum of amala
+
+sum_tbl <- summarise(Santander_sample, sum(renta))
+
+
+sum_tbl %>% formattable()
+```
+
+
+
+</div>  
+
+* עכשיו בוא נוסיף עוד סטטיסטיקות
+
+<div dir=ltr>
+
+```{r basic_sum2}
+
+# sum of amala, number of observations
+sum_tbl <- summarise(Santander_sample
+                     ,Total= sum(renta)
+                     ,"Min"= min(renta)
+                     ,"Max"= max(renta)
+                     ,"Median"= median(renta)
+                     ,"Mean"= mean(renta)
+                     ,"Standard deviation"= sd(renta)
+                     ,"Freq"= n()
+)
+
+#Print Results
+sum_tbl %>% formattable()
+```
+
+
+
+</div>
+
+* שימו לב, הסוגריים לא הכרחיים, הם רק ליופי...
+
+________________________________________    
+
+
+### group_by - קיבוץ
+
+הפקודה לא עושה שום דבר בפני עצמה.
+
+אבל היא עושה הרבה מאוד בשילוב עם שאר הפקודות
+
+עכשיו בוא ננסה לראות את אותו דבר לפי סגמנט בעזרת `group_by`
+
+<div dir=ltr>
+```{r group_by1}
+
+sum_tbl <- Santander_sample %>%
+            group_by(segmento) %>%
+            summarise("Total"=sum(renta)
+                      ,"Min"=min(renta)
+                      ,"Max"=max(renta)
+                      ,"Median"=median(renta)
+                      ,"Mean"=mean(renta)
+                      ,"Standard deviation"=sd(renta)
+                      ,"Freq"=n()
+            )
+
+#Print Results
+sum_tbl %>% formattable()
+
+```
+
+  
+</div>  
+  
+
+**הערה  חשובה: בטבלה שיצרתםם בעזרת `group_by` היא תמיד תהיה מקובצת תחת הקבוצה שיצרתם **
+
+**על מנת להסיר את הקיבוץ תפעילו את הפקודה `ungroup()`**  
+
+
+
+
+_____________________
+
+### mutate - יצירת או שינוי עמודות
+
+בא נגיד שאנו רוצים לחשב עמודה נוספת המבטא את הותק בשנים (במקום בחודשים)
+
+
+<div dir=ltr>
+
+```{r mutate_1}
+calc_vetek <- Santander_sample %>% 
+              mutate(vetek_yrs = antiguedad/12 ) %>% 
+              select(antiguedad, vetek_yrs, age, segmento)
+
+
+#print results
+calc_vetek %>% slice(1:10) %>% formattable()
+
+```
+
+
+</div>
+
+מה שלא מובן מאליו הוא שאפשר להשתמש בשדה החדש עוד באותו פקודה!   
+
+למשל, אם בנוסף הייתי רוצה עוד עמודה המחשבת באיזה גיל התחיל כלקוח
+
+<div dir=ltr>
+
+```{r mutate_2}
+
+calc_vetek <- Santander_sample %>% 
+              mutate( vetek_yrs = antiguedad/12
+                      ,age_lakoach_start = age - vetek_yrs ) %>% 
+              select(antiguedad, vetek_yrs, age, age_lakoach_start, segmento)
+
+calc_vetek %>% slice(1:10) %>% formattable()
+```
+
+</div>
+
+* אם הייתי משתמש בשם של עמודה קיימת הוא היה מחליף אותה    
+* ככה אפשר גם לשנות עמודה כפי שנראה בהמשך    
+
+
+__________________________________________    
+
+________________________________________
+
+
+
+### transmute - תחזיר רק עמודה מחושבת  
+
+לפעמים זה יהיה שימושי להחזיר רק את החישוב:  
+
+<div dir=ltr>
+
+```{r transmutate_1}
+calc_vetek <- Santander_sample %>% 
+                transmute( vetek_yrs = antiguedad/12
+                           ,age_lakoach_start = age - vetek_yrs )
+
+# print results
+calc_vetek %>% slice(1:10) %>% formattable()
+
+```
+
+</div>
+
+
+_________________________________________
+
+
+## ביצוע חישבוים על מספר עמודות
+
+לפונקציות `summarise` ו `transform` יש גרסאות שונות לביצוע אותו פעולה על מספר עמודות:  
+
+עבור פקודת `mutate` יש :
+
+> * `mutate_at` - בצע שינוי או חישוב על כל עמודה מסומנת
+> * `mutate_all` - בצע שינוי או חישוב על כל העמודות
+> * `mutate_if` - בצע שינוי או חישוב על כל עמודה העומדת בתנאי
+
+
+עבור פקודת `summarise` יש :
+
+> * `summarise_all` - בצע סיכום לכל העמודות
+> * `summarise_at` - בצע סיכום לכל עמודה מסומנת
+> * `summarise_if` - בצע סיכום לכל עמודה העומדת בתנאי
+
+אנו נדגים אחד מכל סוג - להרחבה ראו עזרה על `summarise_all`
+
+
+### mutate_at - חישוב על מספר עמודות
+
+אם יש פקודה שרוצים לבצע לכמה עמודות, במקום לכתוב כל אחד בנפרד אפשר להשתמש ב mutate_each.
+
+ה syntax של הפקודה היא:
+
+
+<div dir=ltr>
+
+> mutate_at(.tbl, .cols, .funs, ...)
+
+</div>
+
+כאשר :
+
+* .tbl - שם הטבלה
+* .cols - שמות העמודות עליהן נרצה לבצע  את הפעולה מאוכלסות בתוך הפקודה `()vars`
+* .funs - שמות הפונקציות לביצוע בתוך הפקודה `()funs`
+* ... - פרמטרים נוספים לפונקציות 
+
+למשל, לעגל את העמודות המחושבות  
+
+<div dir=ltr>
+
+```{r mutate_each1}
+calc_vetek2 <- calc_vetek %>% 
+                mutate_at(vars(vetek_yrs, age_lakoach_start)
+                          , funs(round))
+
+
+# print result
+calc_vetek2  %>% slice(1:10) %>% formattable()
+
+# If we want the original values we need to add names!!!
+
+calc_vetek2 <- calc_vetek %>% 
+                mutate_at(vars(vetek_yrs, age_lakoach_start)
+                          , funs("new" = round))
+
+# print result
+
+calc_vetek2 %>% slice(1:10) %>% formattable()
+
+
+# to pass arithematic transfomration use `.` instead of the coloumn name
+
+calc_vetek2 <- calc_vetek %>% 
+                mutate_at(vars(vetek_yrs, age_lakoach_start)
+                          ,funs("mnths" = .*12) )
+
+# print result
+
+calc_vetek2 %>% slice(1:10) %>% formattable()
+
+```
+
+
+</div>
+
+
+
+
+______________________   
+
+### summarise_all - סיכום למספר עמודות  
+
+ובצורה דומה , אם נרצה סיכום של מספר עמודות נשתמש ב summarise_each.  
+
+ה syntax הוא:
+
+
+<div dir=ltr>
+
+> summarise_all(.tbl, .funs, ...)
+
+</div>
+
+
+כאשר :
+
+* .tbl - שם הטבלה
+* .funs - שמות הפונקציות לביצוע בתוך הפקודה `()funs`
+* ... - פרמטרים נוספים לפונקציות 
+
+למשל ערך אחוזון 5 וממוצע: 
+<div dir=ltr>
+
+```{r summarise_all1}
+
+sum_tbl <- calc_vetek %>% 
+            summarise_all( funs("p5" = quantile(.,0.05) , mean) )
+
+
+#print results
+
+sum_tbl %>% formattable()
+
+```
+
+
+</div>
+
+
+* *שימו לב לשימוש ב  `. ` במקום השם של המשתנה שמשתמשים בו*
+
+
+__________________________________________________________________    
+_________________________________________________________________
+
+
+
+## פונקציות חלון - למתקדמים...  
+
+אפשר לחשב פונקציות אגרגטיביות (כמו ממוצע מקסימום ומינימום) ולחבר את התוצאה ישר לטבלה בשילוב עם mutate.  
+
+בנוסף אפשר להשתמש בהם גם עם filter כדי לסנן תוך כדי בלי לייצר משתנה חדש.  
+
+_____________________________________________   
+
+### עם mutate
+
+רק להדגים חלק מהפקודות:  
+
+<div dir=ltr>
+
+```{r window_mutate}
+
+# Show Percent and cumulative Percent
+renta_stats <- Santander_sample %>% 
+                select(renta) %>% 
+                arrange(desc(renta)) %>% 
+                mutate(sum_renta = sum(renta)
+                       ,mean_renta = mean(renta)
+                       ,min_renta = min(renta)
+                       ,max_renta = max(renta)
+                       ,meidan_renta = median(renta)
+                       ,sd_renta = sd(renta)
+                       
+                       ,lag_renta = lag(renta)
+                       ,lead_renta = lead(renta)
+                       
+                       ,cum_sum_renta = cumsum(renta)
+                       ,cum_mean_renta = cummean(renta)
+                       ,cum_min_renta = cummin(renta) 
+                       ,cum_max_renta = cummax(renta)
+                       
+                       ,rank_renta = row_number(renta)
+                       ,rank2_renta = min_rank(renta)
+                       ,rank3_renta = dense_rank(renta)
+                       ,rank4_renta = percent_rank(renta)
+                       ,ntile_renta = ntile(renta, 3)
+                       
+                       ,cum_dist = cume_dist(renta)
+                )
+
+renta_stats %>% slice(1:10) %>% formattable()
+
+```
+
+</div>
+
+
+
+_________________ 
+
+
+### עם filter  
+
+<div dir=ltr>
+
+```{r window_filter}
+sum_tbl <- Santander_sample %>% 
+              filter( renta == max(renta))
+
+sum_tbl2 <- Santander_sample %>% 
+              filter(  renta > mean(renta))
+
+sum_tbl2 <- Santander_sample %>% 
+              filter(  renta > median(renta))
+
+sum_tbl2 %>% select(renta, segmento) %>% slice(1:10) %>% formattable()
+
+```
+
+
+
+</div>
+
+******
+
+
+
+## `duplicates` - מציאת כפילויות
+
+יש מספר דרכים לזהות שורות לא ייחודיות:   
+
+
+* unique - מצא שורות ייחודיות
+* duplicated - מוצא שורות כפולות
+* distinct - כמו ב SQL
+* filter + count - סינון שורות שמופיעות מספר פעמים
+* n_distinct - מחזיר מספר שורות ייחודיות
+
+נגדים רק על חלק מהשיטות
+
+
+
+בואו נשווה בין מספר שורות ייחודיות n_distinct לבין מספר שורות סך הכל n, בפקודת summarise  
+
+<div dir=ltr>
+
+```{r n_distinct}
+
+summarise(Santander_sample
+          , "N Distinct" = n_distinct(segmento)
+          , "N" = n()) %>% formattable()
+
+```
+</div>  
+
+
+עכשיו נקח רק שורות ייחודיות לפי המשתנה segmento בעזרת `distinct`
+
+
+<div dir=ltr>
+
+```{r distinct}
+
+seg_distinct  <-  Santander_sample %>% 
+                    distinct(segmento, .keep_all = TRUE) 
+
+seg_distinct[,1:5]  %>% formattable()
+```
+</div>  
+
+
+ונסתכל על השורות הכפולות בעזרת סינון שורות שמופיעות מספר פעמים:  
+
+
+<div dir=ltr>
+
+```{r duplicates}
+
+dups <- Santander_sample %>% 
+          group_by(segmento) %>% 
+          filter(row_number()>1)
+
+dups %>% select(1:5) %>% slice(1:3) %>% formattable()
+
+```
+
+</div>
+
+__________________________________________________________________________________________________________________________________________________
+
+
+## סיכום ביניים dplyr  
+
+עכשיו יש לכם את הכלים לבצע כמעט כל אנליזה שתרצו על הנתונים שלכם!  
+
+* לסיכום ה syntax  הכללי נראה משהו כזה:  
+
+<div dir=ltr>
+
+>   TableName             %>%    
+>  
+>   group_by(groupVariables)     %>%  
+>  
+>   select(selectedColumns)    %>%  
+>  
+>   mutate(calculatedColumns)
+>   
+>   filter(filterConditions)      %>%  
+>   
+>   arrange(orderByVariables)    
+
+
+</div>
+
+ואם אתם מבצעים סיכום משתנה זה בדרך כלל משהו כזה:  
+
+
+<div dir=ltr>
+
+>   TableName             %>%    
+>  
+>   group_by(groupVariables)     %>%  
+>  
+>   summarise(summaryStatistics)    
+
+
+</div>
+
+*כמובן שהכל לפי הצורך! ולא חייב להראות ככה בכלל !!!!*  
+
+*    עכשיו תורכם!!!*    
+
+____________________________________________     
+
+
+__________________________________________________________________    
+_________________________________________________________________   
+
+
+## פונקציות חיבור בין טבלאות
+
+קבוצה אחרת של פונקציות שרצוי שנכיר הן פונקציות המקשרות בין טבלאות  
+
+רוב המשפחה של פונקציות אלה נגמרים בסיומת _join :  
+
+* inner_join - חיבור רק מה שבשני הטבלאות
+* left_join - חיבור רק מה שבטבלה השמאלית
+* right_join - חיבור רק מה שבטבלה הימנית
+* full_join - מה שבשני הטבלאות   
+* semi_join - מחזיר רק את טבלה שמאל ומשאיר רק רשומות המופיעות בטבלה ימין
+* anti_join - מחזיר רק את טבלה שמאל מסונן לפי טבלה ימין
+
+מי שמכיר SQL ירגיש בבית.  
+
+אנו נעבור רק על left_join  השאר באותו שיטה
+
+______________________     
+
+
+
+### left_join   
+
+למי שלא מכיר, הפקודה מחברת לטבלה הראשונה את כל הרשומות המופיעות בטבלה השנייה שיש להם שדה מפתח זהה.  
+
+ה syntax הבסיסי:
+
+עבור שדה בעל אותו שם בשני הטבלאות:  
+
+<div dir=ltr>
+
+> new_table <- left_join(table1, table2, by="keyValue")  
+
+</div>
+
+
+אם המפתח בעל שם שונה בשני הטלאות:  
+
+<div dir=ltr>
+
+> new_table <- left_join(table1, table2, by=c("key1"="key2"))  
+
+
+</div>
+
+
+
+אם החיבור נעשה על ידי מספר שדות זה יצויין כך:  
+
+<div dir=ltr>
+
+> new_table <- left_join(table1, table2
+,by=c("table1key1"="table2key1"
+,"table1key2"="table2key2"
+))  
+
+
+</div>
+
+_________________________
+
+## נושאים נוספים
+
+זה אמור לכסות את רוב הצרכים המיידיים שלכם בשימוש ב `dplyr`
+
+עם זאת, יש עוד כמה דברים שכדאי לדעת על הספריה שאין זמן לעבור על כולם. הנה שתיים מהבולטים:
+
+* שימוש ב SQL ושות בעזרת dplyr
+* שימוש ב `select_helpers`
+* שימוש בפונקציות מסוג NSE בעזרת `_`
+* ועוד...
+
+אתם מוזמנים לחפש בעזרה ובאינטרנט....
+
+_______________________________   
+
+
+**********
+
+# שינוי מבנה הנתונים
+
+יש שתי חבילות מובילות לשינוי מבנה הנתונים:
+
+* `tidyr` - חבילה מה tidyverse שנועדה לסידור נתונים
+* `reshape2` - חבילה יעודית לשחלוף נתונים
+
+חבילת tidyr היא (בינתיים) קצת יותר מוגבלת בשחלוף נתונים
+
+זאת כיוון שהיא נועדה **לסדר** נתונים בהתאם לפלוסופיה שהוזכרה לעיל
+
+reshape2 נועד רק לשחלף נתונים ולכן הוא יותר גמיש 
+
+נכיר את שניהם בקצרה  
+
+_____________
+
+
+## `tidyr` - שינוי מבנה הנתונים
+
+הפקודות בספריית tidyr נועדו לעשות מנפולציות נפוצות על נתונים:
+
+* שחלוף נתונים: 
+  + `spread` - שחלוף נתונים מ long ל wide
+  + `gather` - שחלוף נתונים מ wide ל long
+
+* אחוד עמודות
+  + `seperate` -  חלוקת עמודה אחת למספר עומדות 
+  + `unite` - חיבור מספר עמודות לעמודה אחת  
+
+
+קודם נטעין את הספריה ונסתכל על הנתונים לדוגמא
+
+
+<div dir=ltr>
+
+```{r lib_tidyr}
+library(tidyr)
+
+N_month_seg <- ungroup(N_month_seg)
+
+N_month_seg %>% slice(1:15) %>% formattable()
+
+```
+
+</div>
+
+
+
+***********
+_______________
+______________
+
+
+### `gather` - מעבר מ wide ל long
+
+ה syntax הבסיסי של הפקודה היא: 
+
+<div dir=ltr>
+
+> gather(data, key, value, ..., na.rm = FALSE, convert = FALSE,
+factor_key = FALSE)
+
+</div>
+
+
+כאשר:
+
+* data - טבלת הנתונים
+* key - שם העמודה החדשה שנייצר שיכיל את שמות העמודות שנאסוף
+* value - שם העמודה החדשה שנייצר שיכיל את הערכים של העמודות שנאספוף
+* ... - שמות העמודות שנרצה לאסוף
+
+
+עכשיו נהפוך ל long בעזרת gather  
+
+<div dir=ltr>
+
+```{r gather_example}
+N_month_seg.long <- N_month_seg %>% 
+                    gather(key = new_var_col
+                           , value = new_value_col 
+                           , sum_cc:chng_ratio )
+
+N_month_seg.long %>% slice(10:20) %>% formattable()
+
+```
+</div>  
+
+
+________________
+  
+
+
+### `spread` - מעבר מ long ל wide
+
+
+ה syntax הבסיסי של הפקודה היא: 
+
+
+<div dir=ltr>
+
+> spread(data, key, value, fill = NA, convert = FALSE, drop = TRUE,
+sep = NULL)
+
+</div>
+
+
+כאשר:
+
+* data - טבלת הנתונים
+* key - שם העמודה המכילה את השמות של העמודות שנרצה לייצר
+* value - שם העמודה עם הערכים שנרצה לפרוס
+* fill - ערך לשים במקומות ריקים
+
+
+ונחזיר חזרה ל wide בעזרת `spread` :
+
+<div dir=ltr>
+
+
+```{r spread_example}
+
+N_month_seg.wide <- N_month_seg.long %>% 
+                    spread(key = new_var_col 
+                           , value = new_value_col )
+
+N_month_seg.wide %>% slice(10:20) %>% formattable()
+
+```
+
+</div>  
+
+
+
+___________________
+
+
+
+### `unite` - איחוד עמודות
+
+ה syntax  של הפקודה היא:
+
+
+<div dir=ltr>
+
+> unite(data, col, ..., sep = "_", remove = TRUE)
+
+</div>
+
+
+כאשר:
+
+* data - טבלת הנתונים
+* col - שם העמודה החדשה שנייצר
+* ...  - שמות העמודות שנרצה לאחד
+* sep - צורת ההפרדה
+* remove - האם לשמור את העמודות המקוריות
+
+
+נייצר משתנה חדש המפריד בין הרכיבים עם סימן `_` כך:
+
+
+<div dir=ltr>
+
+```{r unite_id}
+
+N_month_seg.united <- N_month_seg %>% 
+                      unite(new_col_name 
+                            , fecha_dato , segmento 
+                            , sep="_" 
+                            , remove = TRUE)
+
+N_month_seg.united %>% slice(20:25) %>% formattable()
+
+```
+
+</div>  
+
+שימו לב לפקודה remove = TRUE שמוחק את המשתנים המקוריים, כמובן שאפשר גם לשמור אותם  
+
+
+__________________
+
+
+### `seperate` - פיצול עמודות
+
+ה syntax  של הפקודה היא:
+
+<div dir=ltr>
+
+> separate(data, col, into, sep = "[^[:alnum:]]+", remove = TRUE,
+convert = FALSE, extra = "warn", fill = "warn", ...) 
+
+</div>
+
+כאשר:
+
+* data - טבלת הנתונים
+* col - העמודה שנרצה לפצל
+* into - שמות העמודות החדשות שנייצר בפציול
+* sep - צורת ההפרדה
+* remove - האם לשמור את העמודות המקוריות
+
+
+לחלק עמודה אחת למספר עמודות נשתמש ב `seperate` כך:
+
+<div dir=ltr>
+
+```{r seperate_id}
+# Back to the original
+
+N_month_seg.seperated <- N_month_seg.united %>% 
+                         separate(  new_col_name
+                                  , c("fecha_dato", "segmento") 
+                                  , sep = "_" ) 
+
+N_month_seg.seperated %>% slice(20:25) %>% formattable()
+```
+
+</div>  
+
+
+******
+_______________
+
+
+   
+   
+## `reshape2` - שינוי מבנה הנתונים
+
+
+
+הפקודות החשובות בחבילה הן :
+
+* `melt` - מעבר מ wide ל long
+* `dcast` - מעבר מ long ל wide 
+
+*****  
+__________
+
+### `melt`  - מעבר מ wide ל long 
+
+הסנטקס של  הפקודה היא :
+
+<div dir=ltr>
+
+> melt(data, id.vars, measure.vars,
+variable.name = "variable", value.name = "value", factorsAsStrings = TRUE)
+
+</div>
+
+כאשר:
+
+* data - טבלת הנתונים
+* id.vars - משתני מפתח שנרצה לשמר
+* measure.vars - שמות המשתנים עם ערכים שנרצה לאסוף
+* variable.name - שם המשתנה החדש המכיל את שמות העמודות שנאספו
+* value.name - שם המשתנה החדש המכיל את הערכים של העמודות שנאספו
+* factorsAsStrings - האם להפוך `factor` ל `chr`
+
+
+עכשיו נהפוך ל long בעזרת `melt`
+
+<div dir=ltr>
+
+```{r melt_example}
+library(reshape2)
+
+N_month_seg.long <- N_month_seg %>% 
+                    melt( id.vars = c("fecha_dato", "segmento")
+                          , variable.name = "new_var_col"
+                          , value.name = "new_value_col"
+                          , factorsAsStrings = FALSE )
+
+N_month_seg.long %>% slice(60:65) %>% formattable()
+
+```
+
+</div>  
+
+* שימו לב שלא ציינתי את הפרמט `measure.vars`, במקרה כזה הוא לוקח את כל העמודות שלא ב `id.vars`
+
+* אחרת הייתי צריך לציין אותם אחד אחד מופרדים בגרשיים
+* או לפי מספר עמודות למשל `3:5` 
+
+
+
+
+*****
+
+
+### `dcast` - מעבר מ long ל wide
+
+הסנטקס המקוצר של  הפקודה היא :
+
+<div dir=ltr>
+
+> dcast(data, formula, fun.aggregate = NULL, ..., margins = NULL, value.var = guess_value(data), fill = NULL)
+
+</div>
+
+כאשר:
+
+* data - טבלת הנתונים
+* formula - נוסחא המתארת את השטחת המשתנים
+* fun.aggregate - פונקציה לאגרגציה במקרים של ריבוי ערכים
+* ... - ערכים נוספים לפונקצית האגרגציה
+* value.var - שם העמודה עם הערכים להשטחה
+* fill - ערך לשים עבור מקומות ריקים
+
+ה syntax של הפרמטר `formula` הוא:
+
+<div dir=ltr>
+
+
+> key_col1 + key_col2 ~ val1 + val2
+
+</div>  
+
+בדוגמא שלנו המפתחות הייחודיות הם: fecha_dato ו segmento
+
+
+
+עכשיו נהפוך ל wide בעזרת `dcast`
+
+<div dir=ltr>
+
+```{r dcast_example}
+
+N_month_seg.wide <- N_month_seg.long %>% 
+                    dcast( fecha_dato + segmento ~ new_var_col
+                           , value.var = "new_value_col" 
+                           , fun.aggregate = mean )
+
+N_month_seg.wide %>%  slice(10:20) %>% formattable()
+
+```
+
+</div>  
+
+
+* במקרה הזה היה מיותר לציין `fun.aggregate` 
+* במקרים של ריבוי תצפיות לפי מפתח הוא עושה אגרגציה לפי בחירה
+
+* עוד אופציה נחמדה היא `fill` המאפשר הצבת ערכי ברירת מחדל במקום ערכים חסרים 
+
+</div>
+
+_______________________________________________________   

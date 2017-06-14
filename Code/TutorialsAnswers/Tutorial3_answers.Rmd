@@ -1,0 +1,185 @@
+---
+title: "Tutorial3_Answers"
+author: "GSTAT"
+date: "February 27, 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+## Targil 1
+
+### 1.1
+```{r ans1.1}
+ggplot(Santander_sample, aes(x = age)) +
+  geom_histogram()
+```
+
+### 1.2.
+
+```{r ans1.2}
+ggplot(Santander_sample, aes(x = 1, y = age)) +
+  geom_boxplot()
+```
+
+### 1.3.
+
+```{r ans1.3}
+N_month_seg %>% 
+  filter(segmento == '02 - PARTICULARES') %>% 
+  ggplot(., aes(x = n_pop, y= sum_cc)) +
+  geom_point()
+```
+
+### 1.4.
+
+```{r ans1.4}
+
+N_month_seg %>% 
+  filter(segmento == '02 - PARTICULARES') %>% 
+  ggplot(., aes(x = fecha_dato, y= pct_cc)) +
+  geom_line()
+
+```
+
+### 1.5.
+
+```{r ans1.5}
+
+  ggplot(N_month_seg, aes(x = fecha_dato, y= pct_cc)) +
+  geom_line(aes(color = segmento))
+
+
+```
+
+### 1.6.
+
+```{r ans1.6}
+
+  ggplot(N_month_seg, aes(x = fecha_dato, y= pct_cc)) +
+  geom_line(aes(color = segmento)) +
+  geom_point(aes(color = segmento))
+
+```
+
+
+## 2
+
+### 2.1
+
+```{r ans2.1}
+
+  ggplot(N_month_seg, aes(x = fecha_dato, y= pct_cc)) +
+  geom_line() +
+  facet_wrap( ~ segmento)
+
+```
+
+### 2.2
+
+```{r ans2.2}
+
+  ggplot(N_month_seg, aes(x = fecha_dato, y= pct_cc)) +
+  geom_line() +
+  facet_wrap( ~ segmento, scales = "free") 
+
+```
+
+### 2.3
+
+```{r ans2.3}
+
+ggplot(N_month_seg, aes(x = fecha_dato, y= pct_cc)) +
+  geom_line() +
+  facet_wrap( ~ segmento, scales = "free") +
+  labs(title = "this is the Title"
+       ,x = "This is the X axis"
+       ,y = "This is the Y axis")
+
+```
+
+### 2.4
+
+```{r ans2.4}
+
+  ggplot(Santander_sample, aes(x = sexo, y= age)) +
+  geom_boxplot(aes(fill = sexo))
+
+```
+
+### 2.5
+
+```{r ans2.5}
+
+  ggplot(Santander_sample, aes(x = sexo, y= age)) +
+  geom_boxplot(aes(fill = sexo)) +
+  coord_flip()
+
+```
+
+## 3
+
+### 3.1
+
+```{r ans3.1}
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity", aes(fill = segmento))
+
+```
+
+### 3.2
+
+```{r ans3.2}
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity") +
+facet_wrap(~segmento, scales ="free")
+
+```
+
+### 3.3
+
+```{r ans3.3}
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity") +
+geom_line(aes( y = sum_cc)) +
+facet_wrap(~segmento, scales ="free")
+
+```
+
+### 3.4
+
+```{r ans3.4}
+
+N_month_seg %>% 
+  filter(segmento != '') %>% 
+ggplot( . , aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity") +
+geom_line(aes( y = sum_cc)) +
+facet_wrap(~segmento, scales ="free")
+
+
+```
+
+### 3.5
+
+```{r ans3.5}
+
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = sum_cc)) +
+geom_bar(stat = "identity") +
+facet_wrap(~segmento, scales ="free")
+
+```
+
+### 3.6
+
+```{r ans3.6}
+# It seems that the decrease in credit card holders is probably a result of an increase in customers...
+```
+

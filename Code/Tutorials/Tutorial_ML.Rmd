@@ -1,0 +1,1153 @@
+---
+title: "ML-tutorial"
+author: "GSTAT"
+output:
+  html_document:
+    toc: yes
+    toc_float: true
+    toc_depth: 4
+
+---
+
+![](figures\gstat_logo.jpg)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+load("D:/G-stat/Cal_RCourse/Data/.RData")
+rm(pp)
+```
+
+
+
+<div dir=rtl>
+
+____
+
+# מבוא  
+
+
+בשיעורים הקודמים למדנו את השפה הבסיסית של R , איך להשתמשת בספריות חיצוניות, ואיך לבצע שאילתות ומנפולציה על נתונים
+בעזרת חבילות מה `tidyverse`.
+
+בשיעור הזה נלמד איך לבצע ניתוחים סטטיסטים בסיסיים ומתקדמים יותר בעזרת מגוון ספריות ב R.
+
+השיעור חולק לפי נושאים:
+
+* סטטיסטיקה תאורית ב R
+* נושאים בבניית מודלים
+* אקונומטריקה קלאסית
+* שיטות ב Machine Learning
+
+____________________________  
+
+
+## מטרות השיעור
+
+בשיעור **לא** נלמד על אף אחד מהנושאים לעומק.
+ 
+המטרה היא להכיר לכם את הפרקטיקה של כל הנושאים שנלמד, ולהכיר לכם את השיטות והחבילות הנפוצות ביותר
+כיום לנושאים האלה.
+
+הכוונה היא שעד סוף השיעור, תדעו:
+
+* איך לבצע ניתוח שונות ב R
+* איך להכין את הנתונים לבניית מודלים
+* עקרונות בסיסיים בבניית מודלים
+* איך להריץ רגרסיות ב R
+* איך לבצע ניתוחים שונים של ML ב R
+
+במהלך השיעור נעשה שימוש נרחב בחבילת CARET
+
+בשביל שהניתוחים ירוצו יותר מהר נבחר תת מדגם מאוזן שהכנתי מראש עם פקודה שנלמד עליה עוד מעט...
+
+
+
+
+
+<div dir="ltr">
+
+```{r subsample}
+library(tidyverse)
+library(caret)
+
+model_data <- Santander_sample %>% filter(!is.na(ind_cc)) 
+sub_sample <- createDataPartition(y = model_data$ind_cc,
+                                 p = .05, list = FALSE)
+
+model_data <- Santander_sample[sub_sample,]
+
+rm(sub_sample, Santander_sample)
+
+```
+
+</div>
+
+
+
+____________________________
+
+
+# סטטיסטיקה תאורית ב R
+
+בשיעורים הקודמים כבר למדתם איך להציג סטטיסטיקה תאורית לפי קבוצות של משתנים 
+בעזרת הפקודה `summary` , `table` , ושאילתות בחבילת `dplyr`.
+
+בחלק נשלים את התמונה בעזרת הצגת מבחנים סטטיסטיים לבדיקת שונות בין ממוצעים של משתנה מטרה בין קבוצות של משתנים מסבירים, ובדיקת קורלציות בין משתנים.
+
+____________________________
+
+
+## ניתוח שונות
+
+ניתוח ANOVA נעשה בעזרת הרצת רגרסיה ליניארית ובדיקת השונות בחלקי המדגם.
+
+הפקודה הכללית להרצת רגרסיה ליניארית היא `lm`
+
+<div dir="ltr">
+
+```{r anova}
+
+lm(ind_cc~renta, data = model_data) %>% 
+  anova() 
+
+```
+
+</div>
+
+
+____________________________
+
+
+## בדיקת התפלגויות
+
+table, prop.test
+
+ראינו כבר להוציא התפלגויות כלליות .
+
+בעזרת הפקודה `table`ו `prop.test`  נוכל להוסיף מבחני מובהקות לשוני באוכלוסיה
+
+
+<div dir="ltr">
+
+
+
+```{r table_tesr}
+
+table(model_data$segmento,model_data$ind_cc) %>% 
+prop.test()
+
+```
+
+</div>
+
+____________________________
+
+
+## קורילציות בין משתנים
+
+הפקודה העיקרית היא `cor` כאשר בשיטה ניתן לבחור בין אחד מהשיטות הבאותץ
+
+ניתן 
+
+
+<div dir="ltr">
+
+
+* kendall
+* pearson
+* spearman
+
+
+```{r corr_data}
+
+
+corr_table <- keep(model_data, is.numeric) %>% 
+ cor(.,method = "pearson" , use ="complete.obs")
+
+corr_table[is.na(corr_table)] <- 0
+
+library(d3heatmap)
+d3heatmap(corr_table)
+
+
+rm(corr_table)
+
+```
+
+</div>
+
+
+התוצר של פקודת ה cor היא  מטריצה
+אם היינו רוצים לעבוד עם ggplot על הקורילציות היינו צריכים לעבוד
+קשה ולהמיר את זה לטבלה
+
+במקום זה נשתמש בחבילת d3heatmap שלוקחת מטריצה ומחזירה מפת חום אינטראקטיבית
+
+
+____________________________
+
+
+# נושאים בבניית מודלים
+
+בניית מודלים סטטיסטיים ניתן לחלק למרכיבים הבאים:
+
+* חלוקה למדגמים
+* הכנה מוקדמת של הנתונים
+* הרצת המודלים בהתאם לשיטה סטטיסטית מסוימת
+* בחינת תוצאות טיב התאמה של המודל במדגמים השונים
+
+____________________________
+
+
+
+## חלוקה למדגמים
+
+ה best practice הוא  לחלק את הנתונים לקבוצת פיתוח (train) וקבוצת ביקורת (test), 
+בד"כ ביחס של 70, 30.
+
+זאת על מנת למזער את נזקי over fitting ועוד.
+
+לעיתים גם נרצה להוציא גם מדגם של Out of Time על מנת לראות איך המודל חוזה קדימה.
+
+
+אנו נעשה זאת בעזרת חבילת CARET והפקודה createDataPartition.
+
+הפקודה מחזירה וקטור של אינדקסים שלפיהן נחתוך את הנתונים שלנו.
+
+
+<div dir="ltr">
+
+```{r partition_data}
+
+library(caret)
+
+count(model_data, ind_cc)
+
+# Only 33 missing assuming 0
+model_data <- model_data %>% mutate(ind_cc = ifelse(is.na(ind_cc),0,ind_cc))
+
+# caret::createDataPartition returns indices for rows based on a stratafied sample over the target variable y
+# y = target variable
+# p = percent obs
+# list = format returned
+
+inTrain <- createDataPartition(y = model_data$ind_cc,  p = .7, list = FALSE)
+
+# we use the indices to split our data into training (In sample) and testing (out of sample) tables
+model_train <- model_data[inTrain,]
+model_test <- model_data[-inTrain,]
+
+rm(inTrain)
+
+```
+
+</div>
+
+____________________________
+
+
+## טיפול בנתונים חסרים
+
+
+בגדול יש שתי סיבות למה יהיו נתונים חסרים:
+
+* הנתונים חסרים באקראי
+* יש תבנית לנתונים החסרים
+
+
+הטיפול בנתונים החסרים יעשה בהתאם לסיבת החוסר בנתונים
+
+כמובן שאם הנתונים יותר מדי חסרים אז אולי לא כדאי להשתמש במשתנה הזה...
+
+* אפשר לקבל רושם כללי לכמות המשתנים החסרים בעזרת summary
+
+* אפשר לחקור או להשלים נתונים חסרים בעזרת חבילת mice
+    + md.pattern - מחזיר דפוסים של חוסר בין מספר משתנים
+    + mice - משלים נתונים חסרים לפי שיטה נבחרת
+
+<div dir="ltr">
+
+```{r mice_data}
+
+library(mice)
+
+md.pattern(model_train[,50:55])
+
+summary(model_data[50:55])
+
+# imputing missing data
+#############################
+# This example imputes the missing data using `predictive mean method`
+#  but there are other options: see ?mice
+# A `mids` object is returned. 
+# We need to use `complete` to make the imputed data
+
+
+tempData <- mice(model_data[,50:53]
+                 ,m=5
+                 ,maxit=3
+                 ,meth='pmm'
+                 ,seed=500)
+
+
+############################
+
+# Returning the compete data
+ 
+completedData <- complete(tempData,1)
+
+summary(completedData)
+
+####
+
+rm(tempData, completedData)
+
+```
+
+
+</div>
+
+____________________________
+
+
+## טרנספורמציות על נתונים
+
+כמעט בכל השיטות הסטטיסטיות נרצה לבצע הכנה מוקדמת.
+
+שתי השיטות הנפוצות ביותר הן:
+
+* מיקוד ונרמול נתונים
+* חלוקת משתנים לקטגוריות
+
+_______
+
+
+### מיקוד ונרמול
+
+בעזרת פקודת `preProcess` של חבילת `CARET` ניתן לבצע כל מיני טרנספורמציות נפוצות על הנתונים
+  
+  
+ניתן להשתמש בפקודה כחלק מפקודת `test` המריצה רגרסיות ושיטות של ML או כפקודה בפני עצמה  
+
+
+
+כאן נדגים שימוש של הפקודה לנמרמל ולמרכז את הנתונים
+
+הסינטקס הכללי של הפקודה היא:
+
+
+<div dir="ltr">
+
+> preProcess(data, method, parameters)
+
+```{r center_data}
+
+# Do the centering
+
+trainX <- model_data %>% 
+          select(renta, age, ind_cc) %>% 
+          preProcess(method = c("center", "scale"))
+
+trainX
+
+# apply the centering
+
+model_data_centered <- model_data %>% 
+  select(renta,age, ind_cc) %>% 
+  predict(trainX,.)
+
+head(model_data_centered, 5)
+
+```
+
+</div>
+
+
+* עוד אפשרות זה להשתמש בפקודה `scale` ב R BASE
+
+____________________________
+
+
+### חלוקה לקטגוריות
+
+בגדול יש שתי סוגי משתנים:
+
+* משתנים רציפים
+* משתנים קטגוריאלים
+  
+  
+יש כל מיני סיבות למה נרצה לאגד משתנים לקטגוריות:
+   
+   
+* חיסון מפני ערכים קיצוניים
+* יותר מתאים לרגרסיה לוגיסטית
+* יצירת קבוצות הומוגניות מבחינת משתנה המטרה
+* ועוד
+
+_________
+
+
+#### משתנים רציפים
+
+יש מספר דרכים לחלק משתנים רציפים לקבוצות משמעותיות ביחס למשתנה מטרה
+
+אנחנו נציג שיטה גרפית פשוטה:
+
+
+<div dir="ltr">
+
+
+```{r graph_cut}
+
+model_data %>% 
+  filter(renta<500000) %>% 
+  ggplot(.,aes(x=renta)) +
+  geom_histogram()
+
+model_data %>% 
+  filter(renta<500000) %>% 
+  ggplot(.,aes(x=renta, y= ind_cc)) +
+  geom_smooth()
+
+
+```
+
+</div>
+
+משני הגרפים לעיל רואים גם:
+
+* בעזרת ההיסטוגרמה נדאג שהקבוצות לא יהיו קטנות מדי
+* בעזרת ה loess נחתוך לקבוצות עם ממוצע משתנה מטרה דומה
+* יש גרעין גדול ב 0
+* בקושי יש ערכים מעל 300,000
+
+
+בדוגמא הייתי בוחר לחתוך בערך ב - 50,000 100,000 ו 300,000
+
+
+__________
+
+
+אפשר לחתוך בעזרת `cut` אבל
+מהתרגיל יש לכם כבר כלי חזק לחתוך משתנים לקטגוריות. 
+
+
+<div dir="ltr">
+
+```{r answer_question6}
+
+########################################################
+# First lets make a format function maker
+# Answer to question 6 format function:
+
+grp_fmt<- function(...){
+            function(data_var){
+              data_var <-  cut(data_var 
+                               , include.lowest=TRUE
+                               , right=TRUE
+                               , dig.lab = 7  
+                               ,breaks=c(min(data_var), ... , max(data_var)))
+              data_var
+                                }
+            }
+
+```
+
+</div>
+
+
+יצרנו מעטפת לפקודת cut , המאפשרת חיתוך מהיר  ושמירת התיעוד של החיתוך בתצורה של פונקציה  
+
+
+הפונקציה מחזירה פונקציה הדומה לפורמט של SAS 
+
+
+ניתן להשתמש בה כמעט בכל מקום...
+
+  
+
+**אבל יש לה מקום לשיפור... איך הייתם מתקנים אותה כדי שתטפל בערכים חסרים?**
+
+
+<div dir="ltr">
+
+```{r cat_var}
+
+##############################################
+# What if Im not sure where to cut?
+# I can create 2 options
+
+fmt_renta1 <- grp_fmt(50000, 150000,250000)
+fmt_renta2 <- grp_fmt(50000, 100000,300000)
+
+##############################################
+# And check them one by one like this:
+
+model_train %>%
+group_by(fmt_renta1(renta)) %>% 
+summarise(pct = mean(ind_cc, na.rm = T), Freq = n()) %>% 
+ungroup() %>%
+mutate(grp_pct=Freq*100/sum(Freq))
+
+##############################################
+# I can store them in a list for future use:
+
+fmtl_renta <- list( "fmt_renta1" = fmt_renta1
+                   ,"fmt_renta2" = fmt_renta2)
+
+names(fmtl_renta)
+##############################################
+# Or see them all at once with map or lapply:
+map_df(fmtl_renta,
+         ~ model_train %>%
+          group_by(.(renta)) %>% 
+          summarise(pct = mean(ind_cc, na.rm = T),Freq = n()) %>% 
+          ungroup() %>%
+          mutate(grp_pct=Freq*100/sum(Freq))
+         )
+
+
+
+```
+
+</div>
+
+
+*הדוגמה לעיל ממחישה את הגמישות המובנית בכתיבה פונקציונאלית*
+
+
+____
+
+#### משתנים קטגוריאלים
+
+בשביל לבחון משתנה קטגוריאלי מספיק להסתכל על הממוצעים של אחוזי המשתנה הבינומי ביחס למספר התצפיות בכל קטגוריה
+
+לרוב לא נרצה קבוצות קטנות מדי
+
+
+לדוגמא במשתנה הבא רואים שיש קבוצה אחת קטנה מדי שכדאי לאחד עם אחד הקבוצות הגדולות
+
+
+<div dir="ltr">
+
+
+```{r discrete1}
+
+model_train %>%
+group_by(tiprel_1mes) %>% 
+summarise(pct = mean(ind_cc, na.rm = T)
+          ,Freq = n()) %>% 
+ungroup() %>%
+mutate(grp_pct=Freq*100/sum(Freq))
+
+
+```
+
+</div>
+
+נציג שתי אופציות לחתוך את המשתנה:
+
+* בעזרת gui -> Addins -> Variable Cutting
+* בעזרת הפקודה `recode`
+
+
+
+<div dir="ltr">
+
+```{r cut_discrete}
+##########################################################################
+# Option 1: Recode 
+#  I made this code with the GUI:
+
+model_train$tiprel_1mes_rec <- model_train$tiprel_1mes
+model_train$tiprel_1mes_rec[model_train$tiprel_1mes == "P"] <- "A"
+model_train$tiprel_1mes_rec[model_train$tiprel_1mes == ""] <- "A"
+
+# This turns it form a char vector to a factor:
+model_train$tiprel_1mes_rec <- factor(model_train$tiprel_1mes_rec)
+
+# Lets see the results
+model_train %>%
+group_by(tiprel_1mes_rec) %>% 
+summarise(pct = mean(ind_cc, na.rm = T) ,Freq = n()) %>% 
+ungroup() %>%
+mutate(grp_pct=Freq*100/sum(Freq))
+
+
+
+
+##########################################################################
+# Option 2: Recode 
+# There is a dplyr function for this called `recode` and
+#  `recode_factor` (that turns it into an ordered factor), look at the help:
+
+model_train %>%
+group_by(recode_factor(tiprel_1mes,P="A")) %>% 
+summarise(pct = mean(ind_cc, na.rm = T) ,Freq = n()) %>% 
+ungroup() %>%
+mutate(grp_pct=Freq*100/sum(Freq))
+
+
+```
+
+
+</div>
+
+כפי שאתם רואים שימוש ב GUI זה נחמד אבל דורש יצירת משתנה חדש וכתיבת הרבה קוד....
+
+
+____
+
+
+## מדדים לטיב המודל
+
+* מודלים של רגרסיה לינאירת נסתכל ב R בריבוע
+
+* לגבי מובהקות משתנים נשתמש ב `drop1` העושה מבחן  `TYPE III`  בדומה  ל SAS
+
+* ברגרסיה בינומית אפשר להסתכל על מה שהכי מקטין את ה `deviance`
+
+* את המדדים למודלים בינארים נקח מחבילת ROCR או pROC.
+
+**נראה אותם בהמשך**
+
+____________________________
+
+
+# אקונומטריקה קלאסית
+
+## Syntax של משוואה
+
+כאן נעבור על ה syntax שילווה אותנו ברוב הפקודות של רגרסיות ועוד.
+
+רגרסיות ב R מוגדרות על ידי `formula` מהסוג:
+
+<div dir="ltr">
+
+> y ~ x1 + X2
+
+</div>
+
+
+כאשר `+` פירושו עוד משתנה ולא חיבור מתמטי
+
+____
+
+
+### טרנספורמציה בתוך נוסחא
+
+ניתן לבצע כל טרנספורמציה בתוך שורת הנוסחא
+
+<div dir="ltr">
+
+> y ~ exp(x1) + factor(X2)
+
+</div>
+
+
+* כמובן שאפשר גם להשתמש בפונקציה `grp_frmt` שיצרנו גם בתוך שורת הרגרסיה!*
+
+____
+
+### פעולה מתמטית בתוך נוסחא
+
+אם רוצים פעולה מתמטית יש  לכתוב זאת בתוך `I`
+
+<div dir="ltr">
+
+> y ~ I(x1^2) + I(X2*x1)
+
+</div>
+
+____
+
+### אינטראקציה בין משתנים
+
+אינטראקציה בין משתנים נסמן בסימן `*` כאשר אנטראקציה עם המשתנה עצמו נסמן בהעלאה בחזקה `^`
+
+<div dir="ltr">
+
+> y ~ x1^2 + X2*x1
+
+</div>
+
+_________
+
+
+### פולינום על משתנה
+
+במקום להוסיף ידנית את ערכי הפולינום אפשר לסמן פולינום על משתנה בעזרת הפקודה `poly`
+
+
+<div dir="ltr">
+
+> y ~ x1 + poly(X2,4)
+
+</div>
+
+אבל יתכן ותרצו במקרה כזה להשתמש ב spline , יש פונקציה בחבילת `splines`, הפונקציה `ns()`
+
+______
+
+
+### רגרסיה בלי חותך
+
+רגרסיה בלי חותך נסמן על ידי חיסור של 1
+
+<div dir="ltr">
+
+> y ~ x1 -1
+
+</div>
+
+______________
+
+
+עכשיו שאתם יודעים איך לכתוב נוסחא, נריץ כמה מודלים
+
+
+____________________
+
+
+## פקודות נפוצות למודלים
+
+כמעט לכל השיטות המחזירות מודלים יש את הפקודות הבאות, כאשר לכל שיטה יש את הנואנסים שלה:
+
+
+* `summary` - מציג סיכום תוצאות המודל
+* `predict` - מייצר ערכים חזויים
+* `coefficients` - מחזיר את המקדמים
+* `resid` - מחזיר את השאריות
+* `drop1` - מבחן F למובהקות המשתנה - SAS TYPE III
+
+
+* מי שרוצה לשדרג את העבודה עם רגרסיות - שיסתכל בחבילת `broom`*
+
+_______________
+
+
+## רגרסיה ליניארית
+
+בוא נריץ רגרסיה ליניארית על renta
+
+ה syntax הבסיסי:
+
+
+<div dir="ltr">
+
+
+> lm(formula, data)
+
+
+```{r lm_data}
+
+
+options(
+  contrasts = c("contr.treatment", "contr.treatment"),
+  na.option = na.exclude
+    )
+
+
+reg_lm1 <- lm(renta ~ segmento + poly(age,3), data = model_train)
+
+
+# regression outcomes
+summary(reg_lm1)
+
+# Type III paramter test
+drop1(reg_lm1, test = "F")
+
+# coefficients
+coefficients(reg_lm1)
+
+# residuals and predictons
+resid(reg_lm1) %>% str()
+predict(reg_lm1, model_train) %>% str()
+
+# predict values and residuals
+reg_ml1_data <- model_train %>% 
+                mutate( pred_renta = predict(reg_lm1, model_train)
+                       ,resid_renta = resid(reg_lm1)) %>% 
+                select(renta, pred_renta, resid_renta, segmento, age)
+
+
+######################################
+# Lets examine some graphs...
+
+reg_ml1_data %>%
+  filter(renta < 500000) %>% 
+ggplot(.,aes(renta, pred_renta)) +
+  geom_point(aes(color=segmento)) +
+  geom_smooth(aes(linetype = segmento), method = "lm") + 
+  facet_wrap(~segmento, scales = "free", ncol = 1)
+
+# Well, that looks pretty bad!
+#   Let see the residuals:
+
+# With respect to segmento:
+reg_ml1_data %>%
+  filter(renta < 500000) %>% 
+    ggplot(.,aes(segmento, resid_renta)) +
+    geom_boxplot() +
+    coord_flip()
+
+# With respect to renta:
+reg_ml1_data %>%
+  filter(renta < 500000) %>% 
+    ggplot(.,aes(renta, resid_renta)) +
+    geom_jitter(aes(color = segmento)) +
+    facet_wrap(~segmento)
+
+
+```
+
+
+</div>
+
+
+טוב, זה היה דוגמא לרגרסיה גרועה! :)
+
+אבל הבנתם את העקרון...
+
+* לגבי מדדי החלטה ה R2 שלנו כ 0.008
+
+
+____________________________
+
+
+## רגרסיה לוגיסטית
+
+רגרסיה לוגיסטית שייכת למשפחת הרגרסיות של glm 
+
+ה syntax הבסיסי לרגרסיה לוגיסטית היא:
+
+
+
+<div dir="ltr">
+
+
+> glm(formula, data, family=binomial(link = "logit"))
+
+
+```{r logistic_data}
+
+
+reg_log1 <- glm(ind_cc~ segmento + sexo
+                ,model_train
+                ,family=binomial(link = "logit"))
+
+drop1(reg_log1, test = "LRT")
+summary(reg_log1)
+
+# coefficients
+head(coefficients(reg_log1))
+
+# residuals
+head(resid(reg_log1))
+
+# predict values
+
+pred_vals <- predict(reg_log1, model_train,  type = "response")
+head(pred_vals)
+
+```
+
+</div>
+
+
+
+שימו לב שב `predict` השתמשתי ב `response`
+
+מה הייתי מקבל אם לא הייתי מציין את זה?
+
+
+בשביל מדד לטיב הניבוי נסתכל על מדד gini שנגזר מחישוב AUC  - את החישוב נעשה בעזרת ספריית `pROC`
+
+הפקודה `auc` לוקחת ערך בפועל וערך חזוי
+
+
+<div dir="ltr">
+
+
+```{r auc_gini}
+
+library(pROC)
+
+###### In Sample
+
+# AUC from ROC
+auc(model_train$ind_cc, pred_vals)
+
+# Gini coefficient
+auc(model_train$ind_cc, pred_vals)*2-1
+
+###### Out of Sample
+pred_vals <- predict(reg_log1, model_test,  type = "response")
+# AUC from ROC
+auc(model_test$ind_cc, pred_vals)
+
+# Gini coefficient
+auc(model_test$ind_cc, pred_vals)*2-1
+
+```
+
+</div>
+
+
+חבילת pROC מאפשר עוד כל מיני גרפים , חפשו בעזרה לעוד אפשרויות
+
+* יש גם גרפים גנריים לכל רגרסיה - אבל זה בעיקר scatterplot שלוקחים הרבה זמן להדפיס....
+
+________________
+
+
+עוד שימוש שאפשר לעשות עם כתיבה פונקציונאלית זה לבדוק מספר רגרסיות בשורה אחת:
+
+
+
+```{r multi_reg}
+
+fmrla_list <- list(
+                    frml1 = ind_cc~ segmento + sexo
+                    ,frml2 = ind_cc~ segmento + sexo + renta
+                  )
+
+
+fmrla_list %>% 
+map(. ,function(x) glm(x
+                      ,model_train
+                      ,family=binomial(link = "logit"))
+     )
+
+
+```
+
+
+____________________________
+
+
+
+# שיטות ב Machine Learning
+
+בחלק הזה אנחנו נסקור בקצרה 3 שיטות מובילות ב ML:
+
+* Clustering
+* Decision Trees
+* PCA
+
+את כל השיטות ניתן לעשות במגוון חבילות ובראשן CARET ,
+שם יש פקודה אחת `train` שלוקחת כפרמטר את השיטה לחישוב
+
+  
+אנחנו ננסה להדגים עם כמה ספריות בשביל להרחיב קצת את האופקים....
+
+
+____________________________
+
+
+## מציאת אשכולות - Clustering
+
+
+אפשר לחשב cluster  ב  R בעזרת ספריית  `cluster` הבא מובנה עם התוכנה
+
+על מנת לבדוק את מספר האשכולות נחשב את סכום השונות בתוך האשכולות לכמה 
+
+מספרי אשכולות ונבחר בהתאם 
+   
+   
+נשתמש בנתונים שכבר מרכזנו בפרק של טרנספורמציות...
+   
+    
+הסינטקס הבסיסי:
+
+<div dir="ltr">
+
+> kmeans(data,centers)
+
+
+
+```{r cluster_data}
+
+library(cluster)
+
+###############################
+# This is the basic function:
+
+o_kmean<- kmeans(model_data_centered, centers=7)
+
+############## Choose K through `Elbow` method #######
+
+# Make a function that takes number of centers 
+# and returns the sum of within errors
+
+c_func<-function(k){sum(kmeans(model_data_centered,centers=k)$withinss)}
+c_func(8)
+
+## Lets feed our function to `map_dbl` 
+# Iterate over h = numbers 1 to 30
+h <- seq(1,30)
+wss <- map_dbl(h,c_func)
+# plot the results
+plot(h,wss,type="b",xlab="N Clusters", ylab="Within SSE") 
+
+######### Choose a cluster
+# Based on the graph lets take k=7
+
+o_kmean<- kmeans(model_data_centered, centers=7)
+table(o_kmean$cluster)
+
+# Generic function to plot cluster
+clusplot(model_data_centered, o_kmean$cluster, color=TRUE, shade=TRUE,  lines=0)
+
+```
+
+</div>
+
+
+* החישוב של  `kmeans` יכול להשתנות מהרצה להרצה
+* החבילה `pam` מחשבת `cluster` שהאשכולות יותר עמידים בין ההרצות
+
+
+____________________________
+
+
+## עצי החלטה - Decision Trees
+
+יש כמה ספריות שמריצים עצי החלטה.
+  
+אנחנו נדגים בעזרת הספרייה הבסיסית `rpart`
+
+בנוסף לפורמולה אפשר לשחק עם הפרמטרים הספציפים.  
+
+כגון מדד החלטה לפי מה לפצל - פה בחרנו ב gini
+
+
+פה הגדרנו ב `method` גם שהמשתנה הוא בינארי לעומת רציף או אורדינאלי
+
+
+הסינטקס הבסיסי הוא:
+
+<div dir="ltr">
+
+> rpart(formula, data, method, paramters)
+
+
+```{r decision_tree_data}
+
+library(rpart)
+
+# 1. run the decision tree regression:
+part_reg1 <- rpart( ind_cc ~ factor(last_3m_cc) + factor(last_6m_cc) + renta
+                  ,data = model_train
+                  , method = "class"
+                  ,parms = list(prior = c(.98,.02), split = "gini"))
+
+# 2. Show the outcomes
+summary(part_reg1)
+part_reg1
+
+# 3. Plot the tree
+par(c(1,1), xpd = NA)
+plot(part_reg1)
+text(part_reg1, use.n = TRUE)
+
+# 4. Information plot:
+plotcp(part_reg1)
+text(part_reg1)
+
+# 5. Create predictions and check the Confusion matrix:
+rpartPred <- predict(part_reg1, model_data, type = "class")
+# requires 2 factor vectors
+confusionMatrix(rpartPred, model_data$ind_cc)
+
+###################################################3
+# With CARET train I wasnt able to get a result...
+# But I'll leave you the code to try out: 
+# cvCtrl <- trainControl(method = "repeatedcv",
+#                        repeats = 3,
+#                        summaryFunction = twoClassSummary,
+#                        classProbs = TRUE)
+# 
+# set.seed(1)
+# 
+# rpartTune <- train(fml1
+#                    ,data = model_test
+#                    , method = "rpart"
+#                    ,tuneLength = 30
+#                    ,metric = "Accuracy"
+#                    ,trControl = cvCtrl)
+
+```
+
+
+</div>
+
+____________________________
+
+
+## טרנספרומציה בעזרת Principal Components Analysis
+
+
+ניתן להשתמש ב PCA כשיטה להקטנת מימדיות או למשל כשיש הרבה משתנים דומים ...
+
+
+אנחנו נשתמש באחד הפקודות של `CARET`  לביצוע PCA כהכנה לשלב מידול הבא
+
+נעשה זאת בעזרת הפקודה `PreProcess`
+
+
+<div dir="ltr">
+
+```{r pca_data}
+
+# choose only coloumns starting with `l6m`
+small_data <- model_data %>% select(starts_with("l6m"))
+
+# with CARET - preProcess
+trans <-  preProcess(small_data, 
+                     method=c("BoxCox", "center", "scale", "pca"))
+
+PC <-  predict(trans, small_data)
+
+summary(PC)
+
+
+```
+
+</div>
+
+____________________________
+
+
+# חבילות מומלצות
+
+מה שהוצג במערך הזה הוא רק בגדר ספתח ל ML ב R
+
+מי שרוצה להיכנס לנושא לעומק צריך ללכלך את הידיים ולהבין את הפרמטרים של כל 
+
+פקודה ושיטה.
+
+   
+מספר חבילות מומלצות ל ML ב R:
+
+* CARET - להבין את מגוון האפשרויות שלה - כעקרון יש פקודה בסיסית של `train` שעליה מזינים את השיטה שרוצים להריץ ואת הפרמטרים הרלוונטיים.
+
+**דרוש ניסיון והתנסות בשביל לשלוט ולהתאים כל שיטה...**
+
+
+* H20 - אחד החבילות המובילות בתחום ה ML -  החבילה מייצרת מחשב ורטואלי בתוך ה R ובעצם מפעילה את האלגורתמים בחישובים מקבילים  כש R זה רק מעטפת
+
+* randomForest - יערות החלטה
+
+* XGBOOST - חישוב של יערות החלטה מוגבר... בערך
+
+* nnet ו neuralnet - ספריות לחישוב neural network המדמה את הרצפטורים של המוח - כביכול...
+
+
+ועוד .......
+
+____________________________
+
+
+</div>

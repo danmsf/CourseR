@@ -1,0 +1,173 @@
+---
+title: "Tut_Functions_Answers"
+author: "GSTAT"
+date: "March 7, 2017"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(purrr)
+```
+
+## Answers 1
+
+### 1.1
+
+```{r ans1}
+ans1 <- function(x){print(x)}
+```
+
+
+### 1.2
+
+```{r ans2}
+# Outside of dplyr
+
+ans2 <- function(x){
+                      x^x
+                    }
+
+
+Santander_sample %>% 
+  transmute(renta_sqrd = ans2(renta)) %>% 
+  # only top 5
+  slice(1:5)
+
+```
+
+
+
+### 1.3
+
+```{r ans3}
+
+c1 <- c(1:100)
+c2 <- c(50:90)
+clist <- list(c1,c2)
+
+# option1 returns list
+map(clist , mean)
+
+# option2 returns vector
+map_dbl(clist , mean)
+
+```
+
+
+
+### 1.4.
+
+```{r ans1_4}
+
+ans14 <- map(c(0,50), ~ rnorm(1000,.))
+
+```
+
+
+### 1.5.
+
+```{r ans1_5}
+
+walk(ans14, hist)
+
+```
+
+
+## Answers 2
+
+
+### 2.1
+
+```{r ans21}
+ans21 <- function(x){
+                     cut( x
+                         ,include.lowest=TRUE
+                         ,right=TRUE
+                         ,breaks=c( min(x), 0, 1000, 2000, max(x))
+                         )
+                    }
+
+
+Santander_sample %>%
+  transmute( new_cut = ans4(Sepal.Length)) %>%
+  slice(1:5)
+
+```
+
+
+### 2.2
+
+```{r ans22}
+
+grp_fmt<- function(...){
+            function(data_var){
+                              cut(data_var 
+                                 , include.lowest=TRUE
+                                 , right=TRUE
+                                 , dig.lab = 7  
+                                 ,breaks=c(min(data_var), ... , max(data_var))
+                                 )
+                              }
+            }
+
+```
+
+
+
+### 2.3.
+
+```{r ans23}
+
+fmt1 <- grp_fmt(0,1000,20000)
+fmt2 <- grp_fmt(0,35000,50000)
+fmt3 <- grp_fmt(0,4000,70000)
+
+
+Santander_sample %>% 
+  group_by(fmt1(renta)) %>%
+  summarise(Freq = n(), Mean_cc = mean(ind_cc, na.rm = TRUE))
+
+```
+
+______________
+
+
+## Answers 3
+
+### 3.1.
+
+```{r ans31}
+
+fml_options <- list(
+                    "reg1" = renta ~ age + sexo + segmento
+                    ,"reg2" = renta ~ age + sexo
+                    )
+
+```
+
+
+
+
+### 3.2.
+
+```{r ans32}
+
+regs_options <- fml_options %>% 
+                map(~lm(.,data = Santander_sample))
+
+```
+
+
+
+### 3.3.
+
+```{r ans33}
+
+regs_options %>% map_dbl("R2")
+
+```
+
+__________

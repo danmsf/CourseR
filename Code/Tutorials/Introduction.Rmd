@@ -1,0 +1,130 @@
+---
+title: "Hello R"
+author: "GSTAT"
+date: "Nov 27, 2016"
+output: html_document
+
+# params:
+#   var1: groupk
+---
+
+![](figures\gstat_logo.jpg)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(dplyr)
+# library(readr)
+library(formattable)
+# library(readxl)
+# pols_file <- read_excel("data\\sample_data.xlsx")
+load("D:\\G-stat\\Cal_Rcourse\\Data\\.RData")
+```
+<html dir="rtl">
+
+# ברוכים הבאים ל R
+
+R היא תוכנה סטטיסטית מתקדמת המאפשרת לבצע מגוון רב של פעולות, ביניהם:
+
+  * שאליתות על טבלאות 
+  * מניפולציות על נתונים
+  * אנליזה על נתונים
+  * פיתוח מודלים
+  * הצגות גרפיות מתקדמות
+  * ועד
+
+_______________________________
+
+## מטרות הקורס
+
+מטרת הקורס היא להביא אתכם להרגיש נוח לביצועכל הפעולות הנחוצות לפיתוח מודל מתקדם ב R. איפשהו בתחילת הירידה אחרי הקו בציור הבא: 
+
+
+
+![Dunning- Kruger efffect](figures/dunning-kruger-effect-1140x641.png)
+
+_________________________   
+
+## מבנה הקורס
+
+הקורס יחולק לפרקים הבאים:
+
+### מערך 1
+
+  * הכרת סביבת העבודה ב RSTUDIO
+  * הכרת מבנה הנתונים בבסיס R
+  * שימוש בפונקציות בסיסיות ב R
+
+**עד סוף המערך תרגישו נוח לעבוד ב Rstudio ולבצע פקודות בסיסיות ב R**
+
+__________________________
+
+### מערך 2
+
+  * שימוש בספריות חיצוניות ב R
+  * יבוא נתונים לתוך R
+  * מניפולציות על נתונים בשיטת ה `tidyverse`
+  * ניתוח ושאילתות על נתונים עם ספרית `dplyr`
+  * שחלוף נתונים עם ספריית `tidyr` 
+
+**עד סוף המערך תדעו לבצע שאילתות וניתוחים  סטטיסטיים מתקדמים ב R**  
+
+למשל:  
+
+
+```{r summary_stats_table, echo=FALSE, results='asis'}
+
+Santander_sample %>% 
+           group_by(segmento) %>% 
+           summarise("Freq"=n()
+                     ,"Total"=sum(renta)
+                     ,"Mean"=mean(renta)
+                     ,"Sd"=sd(renta)
+                     ,"Median"=median(renta)
+                     ,"Min"=min(renta)
+                     ,"Max"=max(renta)
+                     ) %>% formattable()
+
+
+```
+
+__________________________
+
+
+### מערך 3
+
+  * סטטיסטיקה תאורית ב R
+  * הכנת נתונים לבניית מודלים
+  * אקונומטריקה קלאסית
+  * שיטות ב ML
+
+
+**עד סוף המערך תדעו לפתח מודלים במגוון שיטות של ML**
+
+____________________________
+
+
+### מערך 4
+
+  * תצוגה גרפית של נתונים עם ספרית `ggplot2`
+  * הכרות עם חבילות גרפיקה אחרות
+  * כתיבת פונקציות ב R
+  * איטרציות בעזרת חבילת `purrr`
+
+**עד סוף המערך תדעו להציג תצוגות גרפיות מרשימות של הניתוחים שלכם**
+**עד סוף המערך תדעו לכתוב פונקציות שימושיות ב R**
+**עד סוף המערך תדעו ליעל את הקוד שלכם בעזרת פעולות על וקטורים**
+
+```{r graph_ggplot, echo=FALSE}
+library(ggplot2)
+Santander_sample %>% 
+  filter(renta>20000 & renta<250000) %>% 
+ggplot(., aes(x=renta))+
+     facet_wrap(~segmento, ncol=3, scales = "free") +
+     geom_histogram(bins=50, colour="blue",aes(fill=factor(segmento))) 
+
+```
+
+
+_________________________________  
+

@@ -1,0 +1,733 @@
+---
+title: "Tutorial 4"
+author: "GSTAT"
+date: "May 29, 2016"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+---
+
+![](figures\gstat_logo.jpg)
+<html dir="rtl">
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+
+load("D:/G-stat/Cal_RCourse/Data/.RData")
+
+
+```
+
+___
+
+
+# הקדמה
+
+בשיעור הקודם למדנו לנהל את המידע שלנו בעזרת `dplyr` ו `tidyr` .
+
+
+בשיעור הזה נתמקד בשתי נושאים חשובים:
+
+* איך לייצר גרפים ב R
+ + בעזרת `ggplot2`
+ + הכרות עם עוד ספריות גרפיקה
+ 
+* איך לכתוב פונקציות ב R
+
+________________________________________    
+
+## מטרות
+
+* להבין את הבסיס של ggplot2 ליצור גרפים
+* להכיר חלק מהחבילות הגרפיות האחרות
+* לדעת איך לכתוב פונקציות ב R 
+
+*****
+
+# `ggplot2` - שפה של גרפיקה
+
+יש הרבה אפשרויות ליצר גרפים ב R . החל מיצירת גרפים בעזרת הפקודות הבסיסיות ב R ועד שימוש בחבילות D3 למיניהם.
+אבל, הבולטת מבין עשרות החיבלות היא `ggplot2` - אחת החבילות הבולטות ב `tidyverse` .
+
+החבילה תפסה מקום מרכזי בעיקר בזכות השפה העקבית והברורה שבה היא משתמשת 
+והאפשרות לשלב מספר גרפים זו על גבי השניה בצורה קלה ומהירה.
+
+
+________________________________________
+
+## פילוסופית החבילה
+
+הפילוסופיה הבסיסית של החבילה היא לעבוד בשכבות, דבר המקובל מאוד בעולם עיצוב גרפי...
+
+העקרונות של בניית גרף הן:
+
+
+* כל גרף מורכב מאובייקט בסיס שעליו מוסיפים שכבות
+
+* כל שכבה היא פקודה גרפית בפני עצמה וניתן לשים אחת על גבי השניה בעזרת הסימן `+`   
+
+* השכבות שולטות בתוכן (סוג גרף) באסטטיקה ובעיצוב של הגרף
+
+* ניתן לשמור את התוצאות בתור אובייקט ולהשתמש בהן אחר כך ולהוסיף עליהם עוד ועוד שכבות   
+
+
+____
+
+
+## חלקי הגרף
+
+הפקודות של ggplot מורכבות ממספר פרמטרים שניתן להגדיר בכל שכבה:  
+
+* data - הטבלה בה הנתונים נמצאים
+* aesthetics - המשתנים והתפקיד שלהם בגרף
+* geometric object - סוג הגרף שרוצים פקודות המתחילות ב geom_
+* scale - פרמטרים לעיצוב הגרף 
+* facet_wrap - גרפים לפי קבוצות
+* statistics - פרמטרים סטטיסטים לגרף 
+* coordinates - קוארדינטות
+* themes - סגנונות כלליים 
+
+________________________________________
+
+
+### יצירת אובייקט ggplot
+
+כדי לייצר גרף, חייב להיות אובייקט בסיסי שאפשר לבנות עליו.
+את האובייקט הזה בונים בעזרת הפקודה ggplot הכוללת את שם הטבלה ממנו שולפים את הנתונים
+ובד"כ התייחסות לנתונים שרוצים להשתמש בהן (אם כי זה לא חובה).
+
+
+לדוגמא
+
+<div dir="ltr">
+
+```{r ggplot_object1}
+
+library(ggplot2)
+library(dplyr)
+
+santander_grp <- Santander_sample %>% 
+                filter(renta>1000 & renta<1000000) %>% 
+                group_by(fecha_dato, segmento, ind_cc) %>% 
+                slice(1:1000)
+
+ggplot( data = santander_grp)
+
+```
+  
+</div>    
+  
+  
+________________________________________
+
+
+###  Aesthetics  - בחירת נתונים
+
+השלב הבא הוא לבחור את התפקיד שאנו רוצים שכל משתנה ישחק.
+
+את זה עושים בעזרת הפקודה `aes`.
+
+*חשוב: בכל פעם שרוצים לפנות לשם של משתנה צריך להשתמשת בפקודה aes*
+
+
+בד"כ נגדיר את התפקידים הבסיסיים של המשתנים כשיוצרים 
+את האובייקט, בתוך פקודת ה ggplot .
+
+לדוגמא אם נרצה את segmento על ציר ה x ואת renta על ציר ה y ,
+נכתוב משהו כזה:
+
+<div dir="ltr">
+
+```{r ggplot_object2}
+
+ggplot(data= santander_grp, aes(x = segmento , y = renta))
+
+```
+
+</div>  
+
+________________________________________
+
+
+מספר נקודות נוספות:
+
+* בכל אחד מהשכבות ניתן להגדיר תפקיד למשתנים בעזרת `aes` 
+
+* ניתן להגדיר בשכבות שונות משתנים מטבלאות שונים - כל עוד הם בעלי אותו שם
+
+* אם לא מציינים באותו שכבה טבלת נתונים, הפקודה ישתמש בטבלת הנתונים שהוגדרה בפקודה ggplot
+
+
+________________________________________
+
+
+###  geometry - בחירת סוג גרף
+
+השלב הבא הוא לבחור שכבה הקובעת איזה גרף אנו רוצים להציג.
+
+כל סוגי הגרפים שניתן להציג מתחילים ב ` geom_ `
+
+אם תתחילו לכתוב את זה יצוצו לכם כל האפשרויות.
+
+ 
+ השימושיים ביותר:
+
+* geom_histogram - היסטוגרמה
+* geom_bar - למשתנים בדידים
+* geom_point - פיזור
+* geom_jitter - פיזור לא חופף
+* geom_line - חיבור בין נקודות
+* geom_smooth - יצירת גרף spline או כל החלקה אחרת
+
+
+
+<div dir="ltr">
+
+```{r ggplot_geom1}
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+  geom_point()
+
+ggplot(data= santander_grp, aes(x = age )) +
+  geom_histogram()
+
+
+```
+
+</div>    
+
+* אפשר להוסיף שכבות של גרפים בעזרת `+`:
+
+
+<div dir="ltr">
+
+```{r ggplot_geom2}
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+  geom_point() +
+  geom_smooth()
+
+```
+</div>    
+
+________________________________________
+
+
+### scales - בחירת פרמטרים גרפיים
+
+עיצוב הגרף נעשה בעזרת הגדרת הפרמטרים ל scales שרוצים לעצב.
+
+הפרמטריים הנפוצים ביותר:
+
+* color - צבע הקו או מסגרת
+* fill -  צבע למילוי האובייקט הגרפי
+* size - גודל האובייקט הגרפי
+* shape - צורת האובייקט הגרפי
+* line type - סגנון קו 
+
+את הפרמטרים לעיצוב הגרף ניתן להגדיר בשלוש מקומות:
+
+1. בתוך פקודת ה `geom_` בצורה רגילה
+2. בתוך פקודת ה `geom_` בשילוב עם משתנה בעזרת `aes`
+3. בתוך שכבה נוספת של `scale_` לגרף
+
+____
+
+
+#### בתוך גאומטריות 
+
+למשל לצייר היסטוגרמה עם מילוי כחול נכתוב: 
+  
+<div dir="ltr">
+
+```{r ggplot_scale1}
+
+ggplot(data= N_month_seg, aes(x = n_pop , y = sum_cc)) +
+  geom_point( color = "red", size = 3) +
+  geom_smooth( linetype = "dashed") 
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+  geom_point( color = "red") +
+  geom_smooth( linetype = "dashed")
+
+```
+
+</div>   
+
+____
+
+
+#### בתוך גאומטריות עם משתנים
+
+אבל אם רוצים להשתמש בפרמטרים צריך להשתמש בתוך הפקודה aes. למשל, הפקודה
+
+<div dir="ltr">
+
+```{r ggplot_scale2}
+ 
+# ggplot(data= N_month_seg, aes(x = n_pop , y = sum_cc)) +
+#   geom_point(aes(color = segmento)) +
+#   geom_smooth() 
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point(aes(color = segmento)) 
+
+
+```
+</div>    
+
+________
+
+
+ואפילו אפשר לבחור scales לפי תנאי על משתנה, למשל:
+
+
+<div dir = "ltr">
+
+```{r ggplot_scale2b}
+
+ggplot(data= N_month_seg, aes(x = n_pop , y = sum_cc)) +
+  geom_point(aes(color = segmento)) +
+  geom_smooth(aes(linetype = n_pop<50000))
+
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point(aes(color = segmento)) +
+    geom_smooth(aes(linetype = age<35))
+   
+
+
+```
+</div>    
+
+
+****  
+
+
+#### מחוץ לגאומטריות
+
+לבסוף, ניתן להשתמש ב scales בחלקים אחרים של הגרף כדי להוסיף כותרות וכו'
+
+  
+<div dir="ltr">
+
+```{r ggplot_scale3}
+
+
+library(scales)
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point(aes(color = segmento)) +
+    geom_smooth(aes(linetype = age<35)) +
+    scale_y_continuous(limits = c(0,250000), label = comma) +
+    scale_x_continuous(limits = c(20,85)) 
+
+   
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point(aes(color = segmento)) +
+    geom_smooth(aes(linetype = age<35)) +
+    scale_y_continuous(limits = c(0,250000), label = comma) +
+    scale_x_continuous(limits = c(20,85)) +
+    scale_color_brewer(palette = 2)
+
+
+
+```
+
+</div>    
+
+
+****
+
+### דברים כלליים
+
+בעזרת מספר פקודות אפשר לתת שמות לצירים וכותרת לגרף
+
+* labs(title, xaxis, yaxis) - מתן שמות לצירים ולכותרת
+* xlabs - קיצור למתן שם לציר ה x
+* ylabs - קיצור למתן שם לציר ה y
+* ggtitle - קיצור למתן שם לכותרת
+
+ואפשר לשלוט במקראה בעזרת
+
+* guides - שליטה על חלק מהפרמטרים של המקראה
+
+  
+<div dir="ltr">
+
+
+```{r ggplot_scale4}
+
+
+   
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point(aes(color = segmento)) +
+    geom_smooth(aes(linetype = age<35)) +
+    scale_y_continuous(limits = c(0,250000), label = comma) +
+    scale_x_continuous(limits = c(20,85)) +
+    scale_color_brewer(palette = 2) +
+    labs(title = "this is the Title"
+         , x = "Look behind you"
+         , y = "Dont look down") +
+    guides( fill = "none")
+
+
+```
+
+</div>    
+
+
+
+***
+
+### תתי גרפים - facet_wrap and facet_grid
+
+ראינו איך לצייר גרף לפי קבוצות עם צבעים... אבל אם נרצה גרף נפרד לכל קבוצה נציין זאת בפקודה facet_wrap ככה:
+
+<div dir="ltr">
+
+`facet_wrap(~grpVar)` 
+
+</div>   
+
+
+אם נרצה לפי שורות : 
+
+<div dir="ltr">
+
+`facet_wrap(grpVars~)`
+
+</div>  
+
+ולפי שני מימדים: 
+
+<div dir="ltr">
+
+`facet_grid(grpVar1~grpVar2)`
+
+</div>  
+
+למשל: 
+
+
+<div dir="ltr">
+
+```{r ggplot_facet1}
+
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point() +
+    geom_smooth() +
+    facet_wrap(~segmento)
+
+
+```
+
+</div>
+
+____
+
+כפי שאתם רואים הצירים כבר לא מתאימים לכל קבוצה
+
+ואם רוצים לשחרר את הצירים כדי שנוכל לראות מה קורה:
+
+
+<div dir="ltr">
+
+```{r ggplot_facet2}
+
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point() +
+    geom_smooth() +
+    facet_wrap(~segmento, scales = "free")
+
+
+```
+
+</div>
+
+
+ואם רוצים לפי שתי משתנים משתמשים ב facet_grid ככה:
+
+
+<div dir="ltr">
+
+```{r ggplot_facet3}
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point() +
+    geom_smooth() +
+    facet_grid(sexo ~ segmento, scales = "free")
+
+
+```
+
+</div>
+
+ 
+
+ 
+***
+
+### סטטיסטיקות - statistics
+
+ישנם הרבה גרפים שקוראים להם והם עושים שלב ביניים סטטיסטי לפני שמציירים את הגרף.
+
+למשל, היסטוגרמה סופרת את המקרים של כל קבוצה, ועוד...
+
+ניתן לשלוט ולשנות את הניתוח הסטטיסטי שנעשה (לדוגמא אם רוצים אחוזים במקום ספירה) על ידי הגדרת הסטטיסטי של אותו גרף
+
+
+אפשר לשלוט על פרמטרים סטטיסטים של האובייקט בתוך השכבה של הגרף, למשל מספר התאים בהיסטוגרמה או בדוגמא שלנו, שיטת ההחלקה:
+  
+<div dir="ltr">
+  
+```{r ggplot_stats1}
+
+ggplot(data= santander_grp, aes(x = age , y = renta)) +
+    geom_point() +
+    geom_smooth(method = "lm" )  +
+    facet_wrap(~segmento, scales = "free")
+
+
+
+```
+
+</div>  
+
+
+אחד הסטטיסטיקות היותר שימושיות הוא - ללא סטטיסטיקה.
+
+זה שימושי במיוחד כשהנתונים שלנו כבר עברו עיבוד סטטיסטי ואנחנו רק רוצים להציג את התוצאות ב geom_bar
+
+הפקודה במקרה זה הוא `stat = "identity"`
+
+
+<div dir="ltr">
+
+```{r ggplot_stats2}
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity") +
+facet_wrap(~segmento)
+
+
+```
+
+</div>  
+
+
+_____
+
+
+### מיקום - position
+
+ניתן גם לשלוט על אופן ההצגה של הגרף כשיש משתנה קבוצתי בעזרת position
+
+דבר זה שימושי בעיקר במקרה הבא:
+
+<div dir="ltr">
+
+```{r ggplot_position1}
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity", aes(fill = segmento))
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity", aes(fill = segmento), position = "fill") 
+
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity", aes(fill = segmento), position = "dodge")
+
+```
+
+</div>  
+
+
+**********
+
+### קואורדינטות -  coordinates
+
+לפעמים גם צריכים לשנות את סוג הקוארדינטות. או את הסגנון שלהם
+
+הדבר בעיקר שיומשי אם רוצים להחליף את הצירים . למשל:
+
+<div dir="ltr">
+
+
+```{r coord1}
+
+
+ggplot(data= N_month_seg, aes(x = fecha_dato , y = n_pop)) +
+geom_bar(stat = "identity", aes(fill = segmento), position = "fill") +
+  coord_flip()
+
+ggplot(data = santander_grp, aes(x = nomprov, y = renta)) +
+  geom_boxplot(aes(fill = nomprov)) +
+  coord_flip() +
+  guides(fill = "none")
+  
+
+```
+
+</div>
+
+
+
+____
+
+
+### themes
+
+על כל שאר האספקטים של הגרף ניתן לשלוט בעזרת פקודת ה theme
+
+לא ניכנס לכל הפרטים של הקוד - במקום זה נלמד איך להשתמש ב add -in  שהורדתי עבורכם בשם
+
+themeAssistant .
+
+* תסמנו את הגרף שלכם
+  + תנווטו עם העכבר ל Addins 
+    + theme Assistant
+
+מבין המוני הדברים שאפשר לעשות ב theme נדגים אחד , שיקטין לנו את ה font בציר ה y:
+  
+<div dir="ltr">
+  
+```{r add_in}
+
+ggplot(data = santander_grp, aes(x = nomprov, y = renta)) +
+  geom_boxplot(aes(fill = nomprov)) +
+  coord_flip() +
+  guides(fill = "none") +
+  theme(axis.text.y =element_text(size = 5) )
+
+```
+
+</div>  
+
+____
+
+## שילוב עם dplyr
+
+מומלץ להשתמש בשתי הבילות dplyr  ו ggplot2 ביחד , במיוחד כשמעבדים נתונים רק לצורך גרפי.
+
+רק תשימו לב לא להתבלבל בין ה `+` לבין ה ` %>% ` .
+
+למשל אם נרצה לסנן את הנתונים לפני ההצגה:
+
+<div dir="ltr">
+
+```{r dplyr_ggplot}
+
+santander_grp %>% 
+  filter(renta<100000 & age>20 & age<50) %>% 
+    ggplot( aes(x = age , y = renta)) +
+      geom_point() +
+      geom_smooth() +
+      facet_wrap(~segmento, scales = "free")
+
+
+```
+
+</div>
+
+
+___
+
+
+# דוגמאות לחבילות גרפיקה אחרים
+
+בשנים האחרונות יש פיצוץ בסוגי הגרפים תומכי html שניתן לייצר.
+
+כאן אדגים רק את התוצרים של חלק מהם...
+
+___
+
+
+
+### d3heatmap 
+
+<div dir ="ltr">
+
+d3heatmap - creates interactive D3 heatmaps including support for row/column highlighting and zooming.
+
+```{r d3heatmap}
+library(d3heatmap)
+d3heatmap(mtcars, scale="column", colors="Blues")
+```
+
+</div>
+
+
+____
+
+### Dygraphs 
+
+
+<div dir = "ltr">
+
+Dygraphs - provides rich facilities for charting time-series data in R and includes support for many interactive features.
+
+```{r}
+library(dygraphs)
+dygraph(nhtemp, main = "New Haven Temperatures") %>% 
+  dyRangeSelector(dateWindow = c("1920-01-01", "1960-01-01"))
+
+```
+
+</div>
+
+
+___
+
+
+### highcharter
+
+
+<div dir = "ltr">
+
+highcharter - make graphs in th Java Highlighter style:
+
+```{r pressure, echo=FALSE}
+
+library(highcharter)
+
+# example 1
+# 
+highchart() %>% 
+  hc_chart(type = "line") %>% 
+  hc_title(text = "Monthly Average Temperature") %>% 
+  hc_subtitle(text = "Source: WorldClimate.com") %>% 
+  hc_xAxis(categories = c('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun','Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')) %>% 
+  hc_yAxis(title = list(text = "Temperature (C)")) %>% 
+  hc_plotOptions(line = list(
+    dataLabels = list(enabled = TRUE),
+    enableMouseTracking = TRUE)
+    ) %>% 
+  hc_add_series(
+      name = "Tokyo",
+      data = c(7.0, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6)
+    ) %>% 
+    hc_add_series(
+      name = "London",
+      data = c(3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8)
+    )
+ 
+
+# example 2
+
+hchart(iris, "scatter", group = Species, x = Sepal.Width, y = Sepal.Length)
+
+```
+
+</div>
+
+</div>
+
+
+_____

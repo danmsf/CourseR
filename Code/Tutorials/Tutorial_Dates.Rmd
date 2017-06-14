@@ -1,0 +1,367 @@
+---
+title: "Tutorial Dates"
+author: "GSTAT"
+date: "May 11, 2016"
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+---
+![](figures\gstat_logo.jpg)
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(dplyr)
+library(stargazer)
+library(formattable)
+library(printr)
+
+load("D:/G-stat/Cal_RCourse/Data/.RData")
+```
+
+
+*****
+
+<div dir="rtl">
+
+## סוגי משתנים
+
+מטרת השיעור הקטן הוא להראות לכם איך לשנות סוגי משתנים
+
+נתרכז בסוגי המשתנים הבאים:
+
+* תאריכים
+* Factors
+* קיבוץ משתנים
+* פקודות כלליות
+
+### תאריכים
+
+ב R תאריכים נשמרים כסוג מיוחד של פקטור הנקרא POSTIxt או POSTIc
+
+יש הרבה אפשרויות לעיבוד תאריכים. אנו נשתמש בספריית lubridate
+
+קודם נטעין את הספריה
+
+<div dir="ltr">
+
+```{r load_lubridate}
+library(lubridate)
+
+```
+
+</div>
+
+#### הגדרת המשתנה כתאריך
+
+בדרך כלל תאריכים נשמרים כטקסט ואנו צריכים להגדיר אותם כתאריך
+
+עם ספרית lubridate אנו משתמשים בפקודה מסוג dmy  כאשר שם הפקודה משתנה בהתאם לפורמט התאריך 
+
+<div dir="ltr">
+
+> dmy(variable)
+
+</div>
+
+אם התאריך קודד כשנה יום חודש נכתוב:
+
+<div dir="ltr">
+
+> ydm(variable)
+
+</div>
+
+
+המשמעות של כל אות מובנת:
+
+* `d` - day
+* `m` - month
+* `y` - year 
+
+ואם זה timestamp אז נכתוב:
+
+<div dir="ltr">
+
+> dmy_hms()
+
+</div>
+
+
+* `h` - hour
+* `m` - minute
+* `s` - second
+
+אחרי שמכילים את הפקודה הנתון נשמר כתאריך
+
+
+
+<div dir="ltr">
+
+```{r date_example, echo=FALSE}
+
+library(dplyr)
+
+
+start_date <- N_month_seg$fecha_dato
+
+str(start_date)
+
+```
+
+</div>
+
+
+במקרה שלנו זה כבר תאריך אז לא צריך להמיר אותו.  
+
+
+אם משתנה הוא טקסט בפורמט יום חודש שנה ולכן נשתמש ב dmy:
+
+<div dir="ltr">
+
+```{r date_example3}
+
+
+# start_date <- dmy_hms(start_date)
+
+# show results
+# str(start_date)
+
+```
+
+</div>
+
+
+***
+
+#### שליפת חלקי תאריך
+
+זה נעשה בפשטות בעזרת הפקודות:
+
+* day
+* month
+* year
+* וכו'
+
+<div dir="ltr">
+
+```{r date_parts}
+
+start_date[1]
+
+day(start_date[1])
+
+month(start_date[1])
+
+year(start_date[1])
+
+hour(start_date[1])
+
+minute(start_date[1])
+
+second(start_date[1])
+
+```
+
+</div>
+
+#### קידום ופיגור תאריכים
+
+מומלץ להשתמש באופרטורים הבאים לקידום או פיגור תאריך
+
+* `%m-%` - lag
+* `%m+%`  - forward
+
+בשילוב עם רכיב התאריך שאנו רוצים לקדם וכמות היחידות שרוצים לקדם בעזרת הפונקציות הבאות
+
+* days(1) - 1 day
+* months(3) - 3 months
+* years(5) - 5 years
+
+<div dir="ltr">
+
+```{r date_advance}
+
+start_date[1]
+
+start_date[1]  %m+% days(5)
+
+start_date[1]  %m-% months(2)
+
+start_date[1]  %m+% years(3)
+
+start_date[1]  + years(3)
+```
+
+<div>
+
+אפשר גם בלי האופרטור אבל זה קצת מסוכן
+
+#### חשבון עם תאריכים
+
+למציאת מספר ימים בין שני תאריכים פשוט מחסירים אחד בשני:
+
+<div dir="ltr">
+
+```{r date_diff}
+end_date <- start_date[1] %m+% days(32)
+end_date
+
+difference <- end_date - start_date[1]
+difference
+as.period(difference, unit='m')
+```
+
+</div>
+
+לצערי אם רוצים חודשים או שנים זה נהיה קצת מסובך
+
+לדעתי הדרך היעילה ביותר למטרות הקורס הוא להגדיר זוג תאריכים כ interval ואז לחלק את ה interval ביחידות שאנו רוצים
+
+יש הרבה שאפשר לעשות עם interval אבל אנו נתמקד בשליפת חודשים
+
+<div dir="ltr">
+
+```{r interval_example}
+t <- interval(start_date[1], end_date)
+
+t
+```
+
+</div>
+
+אם נרצה את מספר החודשים נחלק בעזרת אופרטור המודלוס  ב months(1) כנל שנים וימים
+
+<div dir="ltr">
+
+```{r interval_example2}
+
+t%/%days(1)
+
+t%/%months(1)
+
+t%/%years(1)
+
+```
+
+</div>
+
+אם רוצים מספר מדויק של הפרש בין תאריכים אפשר להכיל את הפקודה as.period על ה interval שיצרנו
+
+<div dir="ltr">
+
+```{r interval_example3}
+as.period(t)
+
+as.period(t, unit = 'days')
+```
+
+</div>
+
+****
+
+### Factor 
+
+משתנה פאקטור יכול להיות מהסוגים הבאים:
+
+* משתנה קטגוריאלי -  Factors - i.e. yes/no, male/female
+* משתנה אורדינאלי -  Ordered Factors - high/medium/low
+
+נשתמש בפקודה :
+
+`factor(variable)`
+
+בשביל משתנה קטגוריאלי
+ 
+ובפקודה:
+
+`factor(variable, ordered=TRUE)`
+
+למשתנה אורדינאלי.
+
+
+אפשר גם להגדיר את רמות המשתנה
+
+הסנטקס המלא:
+
+<div dir="ltr">
+
+> factor(x = character(), levels, labels = levels,
+       exclude = NA, ordered = is.ordered(x), nmax = NA)
+
+</div>
+
+***
+
+### חלוקת משתנה לרמות
+
+ניתן ליצר משתנה קטגוריאלי ממשתנה רציף בעזרת הפקודה cut
+
+הסנטקס המלא:
+
+<div dir="ltr">
+
+> cut(x, breaks, labels = NULL,
+    include.lowest = FALSE, right = TRUE, dig.lab = 3,
+    ordered_result = FALSE, ...)
+</div>
+
+
+***
+
+### GUI Help!!!
+
+למזלכם יש GUI   שכותב את הקוד בשבילכם בשני המקרים הללו
+
+***
+
+### שינוי סוג נתונים
+
+רוב הפקודות לשנות סוג משתנה למשתנה אחר הם מהסוג as.Something
+
+למשל:
+
+
+* `as.data.frame(x)` - to coerce x to a data.frame   
+* `as.numeric(x)` - to coerce x to numeric   
+* `as.character(x)`  - to coerce x to character  
+* `as.date(x)`  - to coerce x to date
+* etc.  
+
+
+****
+
+
+<div dir="ltr">
+
+### The Basic Option for Dates
+
+
+If we type `?as.Date`  in the *console* we can see in the "Help" tab that the syntax is: 
+
+`as.date(variable, "mdy"-format)`
+
+Since our dates were in the "day/month/year" format that is the one we will specify.
+
+Because our "year" input is in 4 digits we use a "Y" instead of a "y":
+
+```{r change_date1}
+# Change dates to Date values
+
+# In the Policy File:
+# The date is originally 'character'
+
+# class(N_month_seg$fecha_dato)
+
+# start_date <- as.Date(N_month_seg$fecha_dato, "%d/%m/%Y")
+
+# And now its in 'date'. Success!
+# class(start_date)
+
+```
+
+</div>
+
+</div>
