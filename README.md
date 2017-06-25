@@ -1,2 +1,3 @@
 # CourseR
-A bunch of course material for R
+A bunch of course material for R....
+In the Hebrew language
