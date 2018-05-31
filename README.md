@@ -2,6 +2,7 @@
 A bunch of course material for R....
 In the Hebrew language
 
+View it over here: [Course Site](https://danmsf.github.io/CourseR/)
 * [00-Working-Environment](/Tutorials/00-Working-Environment.html)
 * [01-Basic-R](/Tutorials/01-Basic-R.html)
 * [02-Basic-Tables](/Tutorials/02-Basic-Tables.html)
